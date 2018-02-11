@@ -11,7 +11,6 @@ import android.os.Process;
 import android.test.AndroidTestCase;
 
 import com.mixpanel.android.util.HttpService;
-import com.mixpanel.android.util.ImageStore;
 import com.mixpanel.android.util.RemoteService;
 import com.mixpanel.android.viewcrawler.UpdatesFromMixpanel;
 

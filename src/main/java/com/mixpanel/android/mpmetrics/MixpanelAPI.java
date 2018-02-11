@@ -3,8 +3,6 @@ package com.mixpanel.android.mpmetrics;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
-import android.app.FragmentTransaction;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,13 +13,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
-import com.mixpanel.android.R;
-import com.mixpanel.android.takeoverinapp.TakeoverInAppActivity;
-import com.mixpanel.android.util.ActivityImageUtils;
 import com.mixpanel.android.util.MPLog;
-import com.mixpanel.android.viewcrawler.TrackingDebug;
-import com.mixpanel.android.viewcrawler.UpdatesFromMixpanel;
-import com.mixpanel.android.viewcrawler.ViewCrawler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,22 +21,11 @@ import org.json.JSONObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -56,14 +37,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * application.
  *
  * <p>Once you have an instance, you can send events to Mixpanel
- * using {@link #track(String, JSONObject)}, and update People Analytics
- * records with {@link #getPeople()}
+ * using {@link #track(String, JSONObject)}
  *
  * <p>The Mixpanel library will periodically send information to
  * Mixpanel servers, so your application will need to have
  * <tt>android.permission.INTERNET</tt>. In addition, to preserve
  * battery life, messages to Mixpanel servers may not be sent immediately
- * when you call <tt>track</tt> or {@link People#set(String, Object)}.
+ * when you call <tt>track</tt> .
  * The library will send messages periodically throughout the lifetime
  * of your application, but you will need to call {@link #flush()}
  * before your application is completely shutdown to ensure all of your
@@ -99,8 +79,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>In addition to this documentation, you may wish to take a look at
  * <a href="https://github.com/mixpanel/sample-android-mixpanel-integration">the Mixpanel sample Android application</a>.
  * It demonstrates a variety of techniques, including
- * updating People Analytics records with {@link People} and registering for
- * and receiving push notifications with {@link People#initPushHandling(String)}.
  *
  * <p>There are also <a href="https://mixpanel.com/docs/">step-by-step getting started documents</a>
  * available at mixpanel.com
@@ -117,114 +95,6 @@ public class MixpanelAPI {
     public static final String VERSION = MPConfig.VERSION;
 
     /**
-     * Declare a string-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<String> stringTweak(String tweakName, String defaultValue) {
-        return sSharedTweaks.stringTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare a boolean-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Boolean> booleanTweak(String tweakName, boolean defaultValue) {
-        return sSharedTweaks.booleanTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare a double-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Double> doubleTweak(String tweakName, double defaultValue) {
-        return sSharedTweaks.doubleTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare a double-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Double> doubleTweak(String tweakName, double defaultValue, double minimumValue, double maximumValue) {
-        return sSharedTweaks.doubleTweak(tweakName, defaultValue, minimumValue, maximumValue);
-    }
-
-    /**
-     * Declare a float-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Float> floatTweak(String tweakName, float defaultValue) {
-        return sSharedTweaks.floatTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare a float-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Float> floatTweak(String tweakName, float defaultValue, float minimumValue, float maximumValue) {
-        return sSharedTweaks.floatTweak(tweakName, defaultValue, minimumValue, maximumValue);
-    }
-
-    /**
-     * Declare a long-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Long> longTweak(String tweakName, long defaultValue) {
-        return sSharedTweaks.longTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare a long-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Long> longTweak(String tweakName, long defaultValue, long minimumValue, long maximumValue) {
-        return sSharedTweaks.longTweak(tweakName, defaultValue, minimumValue, maximumValue);
-    }
-
-    /**
-     * Declare an int-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Integer> intTweak(String tweakName, int defaultValue) {
-        return sSharedTweaks.intTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare an int-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Integer> intTweak(String tweakName, int defaultValue, int minimumValue, int maximumValue) {
-        return sSharedTweaks.intTweak(tweakName, defaultValue, minimumValue, maximumValue);
-    }
-
-    /**
-     * Declare short-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Short> shortTweak(String tweakName, short defaultValue) {
-        return sSharedTweaks.shortTweak(tweakName, defaultValue);
-    }
-
-    /**
-     * Declare byte-valued tweak, and return a reference you can use to read the value of the tweak.
-     * Tweaks can be changed in Mixpanel A/B tests, and can allow you to alter your customers' experience
-     * in your app without re-deploying your application through the app store.
-     */
-    public static Tweak<Byte> byteTweak(String tweakName, byte defaultValue) {
-        return sSharedTweaks.byteTweak(tweakName, defaultValue);
-    }
-
-    /**
      * You shouldn't instantiate MixpanelAPI objects directly.
      * Use MixpanelAPI.getInstance to get an instance.
      */
@@ -239,7 +109,6 @@ public class MixpanelAPI {
     MixpanelAPI(Context context, Future<SharedPreferences> referrerPreferences, String token, MPConfig config) {
         mContext = context;
         mToken = token;
-        mPeople = new PeopleImpl();
         mConfig = config;
 
         final Map<String, String> deviceInfo = new HashMap<String, String>();
@@ -259,13 +128,8 @@ public class MixpanelAPI {
         }
         mDeviceInfo = Collections.unmodifiableMap(deviceInfo);
 
-        mUpdatesFromMixpanel = constructUpdatesFromMixpanel(context, token);
-        mTrackingDebug = constructTrackingDebug();
         mPersistentIdentity = getPersistentIdentity(context, referrerPreferences, token);
         mEventTimings = mPersistentIdentity.getTimeEvents();
-        mUpdatesListener = constructUpdatesListener();
-        mDecideMessages = constructDecideUpdates(token, mUpdatesListener, mUpdatesFromMixpanel);
-        mConnectIntegrations = new ConnectIntegrations(this);
 
         // TODO reading persistent identify immediately forces the lazy load of the preferences, and defeats the
         // purpose of PersistentIdentity's laziness.
@@ -273,7 +137,6 @@ public class MixpanelAPI {
         if (null == decideId) {
             decideId = mPersistentIdentity.getEventsDistinctId();
         }
-        mDecideMessages.setDistinctId(decideId);
 
         mMessages = getAnalyticsMessages();
 
@@ -281,10 +144,6 @@ public class MixpanelAPI {
             track(AutomaticEvents.FIRST_OPEN, null, true);
 
             mPersistentIdentity.setHasLaunched();
-        }
-
-        if (!mConfig.getDisableDecideChecker()) {
-            mMessages.installDecideCheck(mDecideMessages);
         }
 
         registerMixpanelActivityLifecycleCallbacks();
@@ -319,8 +178,6 @@ public class MixpanelAPI {
             } catch (JSONException e) {}
 
         }
-
-        mUpdatesFromMixpanel.startUpdates();
 
         ExceptionHandler.init();
     }
@@ -402,8 +259,7 @@ public class MixpanelAPI {
      * to the current events distinct_id, which may be the distinct_id randomly generated by the Mixpanel library
      * before {@link #identify(String)} is called.
      *
-     * <p>This call does not identify the user after. You must still call both {@link #identify(String)} and
-     * {@link People#identify(String)} if you wish the new alias to be used for Events and People.
+     * <p>This call does not identify the user after. You must still call {@link #identify(String)}
      *
      * @param alias the new distinct_id that should represent original.
      * @param original the old distinct_id that alias will be mapped to.
@@ -432,10 +288,8 @@ public class MixpanelAPI {
      * Associate all future calls to {@link #track(String, JSONObject)} with the user identified by
      * the given distinct id.
      *
-     * <p>This call does not identify the user for People Analytics;
-     * to do that, see {@link People#identify(String)}. Mixpanel recommends using
-     * the same distinct_id for both calls, and using a distinct_id that is easy
-     * to associate with the given user, for example, a server-side account identifier.
+     * use a distinct_id that is easyto associate with the given user,
+     * for example, a server-side account identifier.
      *
      * <p>Calls to {@link #track(String, JSONObject)} made before corresponding calls to
      * identify will use an internally generated distinct id, which means it is best
@@ -451,16 +305,10 @@ public class MixpanelAPI {
      *     same visitor/customer for retention and funnel reporting, so be sure that the given
      *     value is globally unique for each individual user you intend to track.
      *
-     * @see People#identify(String)
      */
     public void identify(String distinctId) {
         synchronized (mPersistentIdentity) {
             mPersistentIdentity.setEventsDistinctId(distinctId);
-            String decideId = mPersistentIdentity.getPeopleDistinctId();
-            if (null == decideId) {
-                decideId = mPersistentIdentity.getEventsDistinctId();
-            }
-            mDecideMessages.setDistinctId(decideId);
         }
     }
 
@@ -580,14 +428,9 @@ public class MixpanelAPI {
      * with events sent using {@link #track(String, JSONObject)}. Before any calls to
      * {@link #identify(String)}, this will be an id automatically generated by the library.
      *
-     * <p>The id returned by getDistinctId is independent of the distinct id used to identify
-     * any People Analytics properties in Mixpanel. To read and write that identifier,
-     * use {@link People#identify(String)} and {@link People#getDistinctId()}.
-     *
      * @return The distinct id associated with event tracking
      *
      * @see #identify(String)
-     * @see People#getDistinctId()
      */
     public String getDistinctId() {
         return mPersistentIdentity.getEventsDistinctId();
@@ -723,17 +566,6 @@ public class MixpanelAPI {
     }
 
     /**
-     * Returns a Mixpanel.People object that can be used to set and increment
-     * People Analytics properties.
-     *
-     * @return an instance of {@link People} that you can use to update
-     *     records in Mixpanel People Analytics and manage Mixpanel Google Cloud Messaging notifications.
-     */
-    public People getPeople() {
-        return mPeople;
-    }
-
-    /**
      * Clears all distinct_ids, superProperties, and push registrations from persistent storage.
      * Will not clear referrer information.
      */
@@ -743,7 +575,6 @@ public class MixpanelAPI {
         // on messages already queued to send with AnalyticsMessages.
         mPersistentIdentity.clearPreferences();
         identify(getDistinctId());
-        mConnectIntegrations.reset();
         flush();
     }
 
@@ -755,500 +586,6 @@ public class MixpanelAPI {
      */
     public Map<String, String> getDeviceInfo() {
         return mDeviceInfo;
-    }
-
-    /**
-     * Core interface for using Mixpanel People Analytics features.
-     * You can get an instance by calling {@link MixpanelAPI#getPeople()}
-     *
-     * <p>The People object is used to update properties in a user's People Analytics record,
-     * and to manage the receipt of push notifications sent via Mixpanel Engage.
-     * For this reason, it's important to call {@link #identify(String)} on the People
-     * object before you work with it. Once you call identify, the user identity will
-     * persist across stops and starts of your application, until you make another
-     * call to identify using a different id.
-     *
-     * A typical use case for the People object might look like this:
-     *
-     * <pre>
-     * {@code
-     *
-     * public class MainActivity extends Activity {
-     *      MixpanelAPI mMixpanel;
-     *
-     *      public void onCreate(Bundle saved) {
-     *          mMixpanel = MixpanelAPI.getInstance(this, "YOUR MIXPANEL API TOKEN");
-     *          mMixpanel.getPeople().identify("A UNIQUE ID FOR THIS USER");
-     *          mMixpanel.getPeople().initPushHandling("YOUR 12 DIGIT GOOGLE SENDER API");
-     *          ...
-     *      }
-     *
-     *      public void userUpdatedJobTitle(String newTitle) {
-     *          mMixpanel.getPeople().set("Job Title", newTitle);
-     *          ...
-     *      }
-     *
-     *      public void onDestroy() {
-     *          mMixpanel.flush();
-     *          super.onDestroy();
-     *      }
-     * }
-     *
-     * }
-     * </pre>
-     *
-     * @see MixpanelAPI
-     */
-    public interface People {
-        /**
-         * Associate future calls to {@link #set(JSONObject)}, {@link #increment(Map)},
-         * and {@link #initPushHandling(String)} with a particular People Analytics user.
-         *
-         * <p>All future calls to the People object will rely on this value to assign
-         * and increment properties. The user identification will persist across
-         * restarts of your application. We recommend calling
-         * People.identify as soon as you know the distinct id of the user.
-         *
-         * @param distinctId a String that uniquely identifies the user. Users identified with
-         *     the same distinct id will be considered to be the same user in Mixpanel,
-         *     across all platforms and devices. We recommend choosing a distinct id
-         *     that is meaningful to your other systems (for example, a server-side account
-         *     identifier), and using the same distinct id for both calls to People.identify
-         *     and {@link MixpanelAPI#identify(String)}
-         *
-         * @see MixpanelAPI#identify(String)
-         */
-        public void identify(String distinctId);
-
-        /**
-         * Sets a single property with the given name and value for this user.
-         * The given name and value will be assigned to the user in Mixpanel People Analytics,
-         * possibly overwriting an existing property with the same name.
-         *
-         * @param propertyName The name of the Mixpanel property. This must be a String, for example "Zip Code"
-         * @param value The value of the Mixpanel property. For "Zip Code", this value might be the String "90210"
-         */
-        public void set(String propertyName, Object value);
-
-        /**
-         * Set a collection of properties on the identified user all at once.
-         *
-         * @param properties a Map containing the collection of properties you wish to apply
-         *      to the identified user. Each key in the Map will be associated with
-         *      a property name, and the value of that key will be assigned to the property.
-         *
-         * See also {@link #set(org.json.JSONObject)}
-         */
-        public void setMap(Map<String, Object> properties);
-
-        /**
-         * Set a collection of properties on the identified user all at once.
-         *
-         * @param properties a JSONObject containing the collection of properties you wish to apply
-         *      to the identified user. Each key in the JSONObject will be associated with
-         *      a property name, and the value of that key will be assigned to the property.
-         */
-        public void set(JSONObject properties);
-
-        /**
-         * Works just like {@link People#set(String, Object)}, except it will not overwrite existing property values. This is useful for properties like "First login date".
-         *
-         * @param propertyName The name of the Mixpanel property. This must be a String, for example "Zip Code"
-         * @param value The value of the Mixpanel property. For "Zip Code", this value might be the String "90210"
-         */
-        public void setOnce(String propertyName, Object value);
-
-        /**
-         * Like {@link People#set(String, Object)}, but will not set properties that already exist on a record.
-         *
-         * @param properties a Map containing the collection of properties you wish to apply
-         *      to the identified user. Each key in the Map will be associated with
-         *      a property name, and the value of that key will be assigned to the property.
-         *
-         * See also {@link #setOnce(org.json.JSONObject)}
-         */
-        public void setOnceMap(Map<String, Object> properties);
-
-        /**
-         * Like {@link People#set(String, Object)}, but will not set properties that already exist on a record.
-         *
-         * @param properties a JSONObject containing the collection of properties you wish to apply
-         *      to the identified user. Each key in the JSONObject will be associated with
-         *      a property name, and the value of that key will be assigned to the property.
-         */
-        public void setOnce(JSONObject properties);
-
-        /**
-         * Add the given amount to an existing property on the identified user. If the user does not already
-         * have the associated property, the amount will be added to zero. To reduce a property,
-         * provide a negative number for the value.
-         *
-         * @param name the People Analytics property that should have its value changed
-         * @param increment the amount to be added to the current value of the named property
-         *
-         * @see #increment(Map)
-         */
-        public void increment(String name, double increment);
-
-        /**
-         * Merge a given JSONObject into the object-valued property named name. If the user does not
-         * already have the associated property, an new property will be created with the value of
-         * the given updates. If the user already has a value for the given property, the updates will
-         * be merged into the existing value, with key/value pairs in updates taking precedence over
-         * existing key/value pairs where the keys are the same.
-         *
-         * @param name the People Analytics property that should have the update merged into it
-         * @param updates a JSONObject with keys and values that will be merged into the property
-         */
-        public void merge(String name, JSONObject updates);
-
-        /**
-         * Change the existing values of multiple People Analytics properties at once.
-         *
-         * <p>If the user does not already have the associated property, the amount will
-         * be added to zero. To reduce a property, provide a negative number for the value.
-         *
-         * @param properties A map of String properties names to Long amounts. Each
-         *     property associated with a name in the map will have its value changed by the given amount
-         *
-         * @see #increment(String, double)
-         */
-        public void increment(Map<String, ? extends Number> properties);
-
-        /**
-         * Appends a value to a list-valued property. If the property does not currently exist,
-         * it will be created as a list of one element. If the property does exist and doesn't
-         * currently have a list value, the append will be ignored.
-         * @param name the People Analytics property that should have it's value appended to
-         * @param value the new value that will appear at the end of the property's list
-         */
-        public void append(String name, Object value);
-
-        /**
-         * Adds values to a list-valued property only if they are not already present in the list.
-         * If the property does not currently exist, it will be created with the given list as it's value.
-         * If the property exists and is not list-valued, the union will be ignored.
-         *
-         * @param name name of the list-valued property to set or modify
-         * @param value an array of values to add to the property value if not already present
-         */
-        void union(String name, JSONArray value);
-
-        /**
-         * Remove value from a list-valued property only if they are already present in the list.
-         * If the property does not currently exist, the remove will be ignored.
-         * If the property exists and is not list-valued, the remove will be ignored.
-         * @param name the People Analytics property that should have it's value removed from
-         * @param value the value that will be removed from the property's list
-         */
-        public void remove(String name, Object value);
-
-        /**
-         * permanently removes the property with the given name from the user's profile
-         * @param name name of a property to unset
-         */
-        void unset(String name);
-
-        /**
-         * Track a revenue transaction for the identified people profile.
-         *
-         * @param amount the amount of money exchanged. Positive amounts represent purchases or income from the customer, negative amounts represent refunds or payments to the customer.
-         * @param properties an optional collection of properties to associate with this transaction.
-         */
-        public void trackCharge(double amount, JSONObject properties);
-
-        /**
-         * Permanently clear the whole transaction history for the identified people profile.
-         */
-        public void clearCharges();
-
-        /**
-         * Permanently deletes the identified user's record from People Analytics.
-         *
-         * <p>Calling deleteUser deletes an entire record completely. Any future calls
-         * to People Analytics using the same distinct id will create and store new values.
-         */
-        public void deleteUser();
-
-        /**
-         * Enable end-to-end Google Cloud Messaging (GCM) from Mixpanel.
-         *
-         * <p>Calling this method will allow the Mixpanel libraries to handle GCM user
-         * registration, and enable Mixpanel to show alerts when GCM messages arrive.
-         *
-         * <p>To use {@link People#initPushHandling}, you will need to add the following to your application manifest:
-         *
-         * <pre>
-         * {@code
-         * <receiver android:name="com.mixpanel.android.mpmetrics.GCMReceiver"
-         *           android:permission="com.google.android.c2dm.permission.SEND" >
-         *     <intent-filter>
-         *         <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-         *         <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-         *         <category android:name="YOUR_PACKAGE_NAME" />
-         *     </intent-filter>
-         * </receiver>
-         * }
-         * </pre>
-         *
-         * Be sure to replace "YOUR_PACKAGE_NAME" with the name of your package. For
-         * more information and a list of necessary permissions, see {@link GCMReceiver}.
-         *
-         * <p>If you're planning to use end-to-end support for Messaging, we recommend you
-         * call this method immediately after calling {@link People#identify(String)}, likely
-         * early in your application's life cycle. (for example, in the onCreate method of your
-         * main application activity.)
-         *
-         * <p>Calls to {@link People#initPushHandling} should not be mixed with calls to
-         * {@link #setPushRegistrationId(String)} and {@link #clearPushRegistrationId()}
-         * in the same application. Application authors should choose one or the other
-         * method for handling Mixpanel GCM messages.
-         *
-         * @param senderID of the Google API Project that registered for Google Cloud Messaging
-         *     You can find your ID by looking at the URL of in your Google API Console
-         *     at https://code.google.com/apis/console/; it is the twelve digit number after
-         *     after "#project:" in the URL address bar on console pages.
-         *
-         * @see com.mixpanel.android.mpmetrics.GCMReceiver
-         * @see <a href="https://mixpanel.com/docs/people-analytics/android-push">Getting Started with Android Push Notifications</a>
-         */
-        public void initPushHandling(String senderID);
-
-        /**
-         * Retrieves Google Cloud Messaging registration ID.
-         *
-         * <p>{@link People#getPushRegistrationId} should only be called after {@link #identify(String)} has been called.
-         *
-         * @return GCM push token or null if the user has not been registered in GCM.
-         *
-         * @see #initPushHandling(String)
-         * @see #setPushRegistrationId(String)
-         */
-        public String getPushRegistrationId();
-
-        /**
-         * Manually send a Google Cloud Messaging registration id to Mixpanel.
-         *
-         * <p>If you are handling Google Cloud Messages in your own application, but would like to
-         * allow Mixpanel to handle messages originating from Mixpanel campaigns, you should
-         * call setPushRegistrationId with the "registration_id" property of the
-         * com.google.android.c2dm.intent.REGISTRATION intent when it is received.
-         *
-         * <p>setPushRegistrationId should only be called after {@link #identify(String)} has been called.
-         *
-         * <p>Calls to {@link People#setPushRegistrationId} should not be mixed with calls to {@link #initPushHandling(String)}
-         * in the same application. In addition, applications that call setPushRegistrationId
-         * should also call {@link #clearPushRegistrationId()} when they receive an intent to unregister
-         * (a com.google.android.c2dm.intent.REGISTRATION intent with getStringExtra("unregistered") != null)
-         *
-         * @param registrationId the result of calling intent.getStringExtra("registration_id")
-         *     on a com.google.android.c2dm.intent.REGISTRATION intent
-         *
-         * @see #initPushHandling(String)
-         * @see #clearPushRegistrationId()
-         */
-        public void setPushRegistrationId(String registrationId);
-
-        /**
-         * Manually clear all current Google Cloud Messaging registration ids from Mixpanel.
-         *
-         * <p>If you are handling Google Cloud Messages in your own application, you should
-         * call this method when your application receives a com.google.android.c2dm.intent.REGISTRATION
-         * with getStringExtra("unregistered") != null
-         *
-         * <p>{@link People#clearPushRegistrationId} should only be called after {@link #identify(String)} has been called.
-         *
-         * <p>In general, all applications that call {@link #setPushRegistrationId(String)} should include a call to
-         * clearPushRegistrationId, and no applications that call
-         * {@link #initPushHandling(String)} should call clearPushRegistrationId
-         */
-        public void clearPushRegistrationId();
-
-        /**
-         * Manually clear a single Google Cloud Messaging registration id from Mixpanel.
-         *
-         * <p>If you are handling Google Cloud Messages in your own application, you should
-         * call this method when your application receives a com.google.android.c2dm.intent.REGISTRATION
-         * with getStringExtra("unregistered") != null
-         *
-         * <p>{@link People#clearPushRegistrationId} should only be called after {@link #identify(String)} has been called.
-         *
-         * <p>In general, all applications that call {@link #setPushRegistrationId(String)} should include a call to
-         * clearPushRegistrationId, and no applications that call
-         * {@link #initPushHandling(String)} should call clearPushRegistrationId
-         */
-        public void clearPushRegistrationId(String registrationId);
-
-        /**
-         * Returns the string id currently being used to uniquely identify the user associated
-         * with events sent using {@link People#set(String, Object)} and {@link People#increment(String, double)}.
-         * If no calls to {@link People#identify(String)} have been made, this method will return null.
-         *
-         * <p>The id returned by getDistinctId is independent of the distinct id used to identify
-         * any events sent with {@link MixpanelAPI#track(String, JSONObject)}. To read and write that identifier,
-         * use {@link MixpanelAPI#identify(String)} and {@link MixpanelAPI#getDistinctId()}.
-         *
-         * @return The distinct id associated with updates to People Analytics
-         *
-         * @see People#identify(String)
-         * @see MixpanelAPI#getDistinctId()
-         */
-        public String getDistinctId();
-
-        /**
-         * Shows an in-app notification to the user if one is available. If the notification
-         * is a mini notification, this method will attach and remove a Fragment to parent.
-         * The lifecycle of the Fragment will be handled entirely by the Mixpanel library.
-         *
-         * <p>If the notification is a takeover notification, a TakeoverInAppActivity will be launched to
-         * display the Takeover notification.
-         *
-         * <p>It is safe to call this method any time you want to potentially display an in-app notification.
-         * This method will be a no-op if there is already an in-app notification being displayed.
-         *
-         * <p>This method is a no-op in environments with
-         * Android API before JellyBean/API level 16.
-         *
-         * @param parent the Activity that the mini notification will be displayed in, or the Activity
-         * that will be used to launch TakeoverInAppActivity for the takeover notification.
-         */
-        public void showNotificationIfAvailable(Activity parent);
-
-        /**
-         * Applies A/B test changes, if they are present. By default, your application will attempt
-         * to join available experiments any time an activity is resumed, but you can disable this
-         * automatic behavior by adding the following tag to the &lt;application&gt; tag in your AndroidManifest.xml
-         * {@code
-         *     <meta-data android:name="com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates"
-         *                android:value="false" />
-         * }
-         *
-         * If you disable AutoShowMixpanelUpdates, you'll need to call joinExperimentIfAvailable to
-         * join or clear existing experiments. If you want to display a loading screen or otherwise
-         * wait for experiments to load from the server before you apply them, you can use
-         * {@link #addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener)} to
-         * be informed that new experiments are ready.
-         */
-        public void joinExperimentIfAvailable();
-
-        /**
-         * Shows the given in-app notification to the user. Display will occur just as if the
-         * notification was shown via showNotificationIfAvailable. In most cases, it is
-         * easier and more efficient to use showNotificationIfAvailable.
-         *
-         * @param notif the {@link com.mixpanel.android.mpmetrics.InAppNotification} to show
-         *
-         * @param parent the Activity that the mini notification will be displayed in, or the Activity
-         * that will be used to launch TakeoverInAppActivity for the takeover notification.
-         */
-        public void showGivenNotification(InAppNotification notif, Activity parent);
-
-        /**
-         * Sends an event to Mixpanel that includes the automatic properties associated
-         * with the given notification. In most cases this is not required, unless you're
-         * not showing notifications using the library-provided in views and activities.
-         *
-         * @param eventName the name to use when the event is tracked.
-         *
-         * @param notif the {@link com.mixpanel.android.mpmetrics.InAppNotification} associated with the event you'd like to track.
-         *
-         * @param properties additional properties to be tracked with the event.
-         */
-        public void trackNotification(String eventName, InAppNotification notif, JSONObject properties);
-
-        /**
-         * Returns an InAppNotification object if one is available and being held by the library, or null if
-         * no notification is currently available. Callers who want to display in-app notifications should call this
-         * method periodically. A given InAppNotification will be returned only once from this method, so callers
-         * should be ready to consume any non-null return value.
-         *
-         * <p>This function will return quickly, and will not cause any communication with
-         * Mixpanel's servers, so it is safe to call this from the UI thread.
-         *
-         * Note: you must call call {@link People#trackNotificationSeen(InAppNotification)} or you will
-         * receive the same {@link com.mixpanel.android.mpmetrics.InAppNotification} again the
-         * next time notifications are refreshed from Mixpanel's servers (on identify, or when
-         * your app is destroyed and re-created)
-         *
-         * @return an InAppNotification object if one is available, null otherwise.
-         */
-        public InAppNotification getNotificationIfAvailable();
-
-        /**
-         * Tells MixPanel that you have handled an {@link com.mixpanel.android.mpmetrics.InAppNotification}
-         * in the case where you are manually dealing with your notifications ({@link People#getNotificationIfAvailable()}).
-         *
-         * Note: if you do not acknowledge the notification you will receive it again each time
-         * you call {@link People#identify(String)} and then call {@link People#getNotificationIfAvailable()}
-         *
-         * @param notif the notification to track (no-op on null)
-         */
-        void trackNotificationSeen(InAppNotification notif);
-
-        /**
-         * Shows an in-app notification identified by id. The behavior of this is otherwise identical to
-         * {@link People#showNotificationIfAvailable(Activity)}.
-         *
-         * @param id the id of the InAppNotification you wish to show.
-         * @param parent  the Activity that the mini notification will be displayed in, or the Activity
-         * that will be used to launch TakeoverInAppActivity for the takeover notification.
-         */
-        public void showNotificationById(int id, final Activity parent);
-
-        /**
-         * Return an instance of Mixpanel people with a temporary distinct id.
-         * Instances returned by withIdentity will not check decide with the given distinctId.
-         */
-        public People withIdentity(String distinctId);
-
-        /**
-         * Adds a new listener that will receive a callback when new updates from Mixpanel
-         * (like in-app notifications or A/B test experiments) are discovered. Most users of the library
-         * will not need this method since in-app notifications and experiments are
-         * applied automatically to your application by default.
-         *
-         * <p>The given listener will be called when a new batch of updates is detected. Handlers
-         * should be prepared to handle the callback on an arbitrary thread.
-         *
-         * <p>The listener will be called when new in-app notifications or experiments
-         * are detected as available. That means you wait to call
-         * {@link People#showNotificationIfAvailable(Activity)}, and {@link People#joinExperimentIfAvailable()}
-         * to show content and updates that have been delivered to your app. (You can also call these
-         * functions whenever else you would like, they're inexpensive and will do nothing if no
-         * content is available.)
-         *
-         * @param listener the listener to add
-         */
-        public void addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
-
-        /**
-         * Removes a listener previously registered with addOnMixpanelUpdatesReceivedListener.
-         *
-         * @param listener the listener to add
-         */
-        public void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
-
-        /**
-         * Sets the listener that will receive a callback when new Tweaks from Mixpanel are discovered. Most
-         * users of the library will not need this method, since Tweaks are applied automatically to your
-         * application by default.
-         *
-         * <p>The given listener will be called when a new batch of Tweaks is applied. Handlers
-         * should be prepared to handle the callback on an arbitrary thread.
-         *
-         * <p>The listener will be called when new Tweaks are detected as available. That means the listener
-         * will get called once {@link People#joinExperimentIfAvailable()} has successfully applied the changes.
-         *
-         * @param listener the listener to set
-         */
-        public void addOnMixpanelTweaksUpdatedListener(OnMixpanelTweaksUpdatedListener listener);
-
-        /**
-         * Removes the listener previously registered with addOnMixpanelTweaksUpdatedListener.
-         *
-         */
-        public void removeOnMixpanelTweaksUpdatedListener(OnMixpanelTweaksUpdatedListener listener);
-
     }
 
     /**
@@ -1321,7 +658,6 @@ public class MixpanelAPI {
 
     /* package */ void onBackground() {
         flush();
-        mUpdatesFromMixpanel.applyPersistedUpdates();
     }
 
     // Package-level access. Used (at least) by GCMReceiver
@@ -1371,681 +707,14 @@ public class MixpanelAPI {
         return new PersistentIdentity(referrerPreferences, storedPreferences, timeEventsPrefs, mixpanelPrefs);
     }
 
-    /* package */ DecideMessages constructDecideUpdates(final String token, final DecideMessages.OnNewResultsListener listener, UpdatesFromMixpanel updatesFromMixpanel) {
-        return new DecideMessages(mContext, token, listener, updatesFromMixpanel, mPersistentIdentity.getSeenCampaignIds());
-    }
-
-    /* package */ UpdatesListener constructUpdatesListener() {
-        if (Build.VERSION.SDK_INT < MPConfig.UI_FEATURES_MIN_API) {
-            MPLog.i(LOGTAG, "Notifications are not supported on this Android OS Version");
-            return new UnsupportedUpdatesListener();
-        } else {
-            return new SupportedUpdatesListener();
-        }
-    }
-
-    /* package */ UpdatesFromMixpanel constructUpdatesFromMixpanel(final Context context, final String token) {
-        if (Build.VERSION.SDK_INT < MPConfig.UI_FEATURES_MIN_API) {
-            MPLog.i(LOGTAG, "SDK version is lower than " + MPConfig.UI_FEATURES_MIN_API + ". Web Configuration, A/B Testing, and Dynamic Tweaks are disabled.");
-            return new NoOpUpdatesFromMixpanel(sSharedTweaks);
-        } else if (mConfig.getDisableViewCrawler() || Arrays.asList(mConfig.getDisableViewCrawlerForProjects()).contains(token)) {
-            MPLog.i(LOGTAG, "DisableViewCrawler is set to true. Web Configuration, A/B Testing, and Dynamic Tweaks are disabled.");
-            return new NoOpUpdatesFromMixpanel(sSharedTweaks);
-        } else {
-            return new ViewCrawler(mContext, mToken, this, sSharedTweaks);
-        }
-    }
-
-    /* package */ TrackingDebug constructTrackingDebug() {
-        if (mUpdatesFromMixpanel instanceof ViewCrawler) {
-            return (TrackingDebug) mUpdatesFromMixpanel;
-        }
-
-        return null;
-    }
-
     /* package */ boolean sendAppOpen() {
         return !mConfig.getDisableAppOpenEvent();
     }
 
-    ///////////////////////
-
-    private class PeopleImpl implements People {
-        @Override
-        public void identify(String distinctId) {
-            synchronized (mPersistentIdentity) {
-                mPersistentIdentity.setPeopleDistinctId(distinctId);
-                mDecideMessages.setDistinctId(distinctId);
-            }
-            pushWaitingPeopleRecord();
-         }
-
-        @Override
-        public void setMap(Map<String, Object> properties) {
-            if (null == properties) {
-                MPLog.e(LOGTAG, "setMap does not accept null properties");
-                return;
-            }
-
-            try {
-                set(new JSONObject(properties));
-            } catch (NullPointerException e) {
-                MPLog.w(LOGTAG, "Can't have null keys in the properties of setMap!");
-            }
-        }
-
-        @Override
-        public void set(JSONObject properties) {
-            try {
-                final JSONObject sendProperties = new JSONObject(mDeviceInfo);
-                for (final Iterator<?> iter = properties.keys(); iter.hasNext();) {
-                    final String key = (String) iter.next();
-                    sendProperties.put(key, properties.get(key));
-                }
-
-                final JSONObject message = stdPeopleMessage("$set", sendProperties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception setting people properties", e);
-            }
-        }
-
-        @Override
-        public void set(String property, Object value) {
-            try {
-                set(new JSONObject().put(property, value));
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "set", e);
-            }
-        }
-
-        @Override
-        public void setOnceMap(Map<String, Object> properties) {
-            if (null == properties) {
-                MPLog.e(LOGTAG, "setOnceMap does not accept null properties");
-                return;
-            }
-            try {
-                setOnce(new JSONObject(properties));
-            } catch (NullPointerException e) {
-                MPLog.w(LOGTAG, "Can't have null keys in the properties setOnceMap!");
-            }
-        }
-
-        @Override
-        public void setOnce(JSONObject properties) {
-            try {
-                final JSONObject message = stdPeopleMessage("$set_once", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception setting people properties");
-            }
-        }
-
-        @Override
-        public void setOnce(String property, Object value) {
-            try {
-                setOnce(new JSONObject().put(property, value));
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "set", e);
-            }
-        }
-
-        @Override
-        public void increment(Map<String, ? extends Number> properties) {
-            final JSONObject json = new JSONObject(properties);
-            try {
-                final JSONObject message = stdPeopleMessage("$add", json);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception incrementing properties", e);
-            }
-        }
-
-        @Override
-        // Must be thread safe
-        public void merge(String property, JSONObject updates) {
-            final JSONObject mergeMessage = new JSONObject();
-            try {
-                mergeMessage.put(property, updates);
-                final JSONObject message = stdPeopleMessage("$merge", mergeMessage);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception merging a property", e);
-            }
-        }
-
-        @Override
-        public void increment(String property, double value) {
-            final Map<String, Double> map = new HashMap<String, Double>();
-            map.put(property, value);
-            increment(map);
-        }
-
-        @Override
-        public void append(String name, Object value) {
-            try {
-                final JSONObject properties = new JSONObject();
-                properties.put(name, value);
-                final JSONObject message = stdPeopleMessage("$append", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception appending a property", e);
-            }
-        }
-
-        @Override
-        public void union(String name, JSONArray value) {
-            try {
-                final JSONObject properties = new JSONObject();
-                properties.put(name, value);
-                final JSONObject message = stdPeopleMessage("$union", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception unioning a property");
-            }
-        }
-
-        @Override
-        public void remove(String name, Object value) {
-            try {
-                final JSONObject properties = new JSONObject();
-                properties.put(name, value);
-                final JSONObject message = stdPeopleMessage("$remove", properties);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception appending a property", e);
-            }
-        }
-
-        @Override
-        public void unset(String name) {
-            try {
-                final JSONArray names = new JSONArray();
-                names.put(name);
-                final JSONObject message = stdPeopleMessage("$unset", names);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception unsetting a property", e);
-            }
-        }
-
-        @Override
-        public InAppNotification getNotificationIfAvailable() {
-            return mDecideMessages.getNotification(mConfig.getTestMode());
-        }
-
-        @Override
-        public void trackNotificationSeen(InAppNotification notif) {
-            if(notif == null) return;
-
-            mPersistentIdentity.saveCampaignAsSeen(notif.getId());
-            trackNotification("$campaign_delivery", notif, null);
-            final MixpanelAPI.People people = getPeople().withIdentity(getDistinctId());
-            if (people != null) {
-                final DateFormat dateFormat = new SimpleDateFormat(ENGAGE_DATE_FORMAT_STRING, Locale.US);
-                final JSONObject notifProperties = notif.getCampaignProperties();
-                try {
-                    notifProperties.put("$time", dateFormat.format(new Date()));
-                } catch (final JSONException e) {
-                    MPLog.e(LOGTAG, "Exception trying to track an in-app notification seen", e);
-                }
-                people.append("$campaigns", notif.getId());
-                people.append("$notifications", notifProperties);
-            } else {
-                MPLog.e(LOGTAG, "No identity found. Make sure to call getPeople().identify() before showing in-app notifications.");
-            }
-        }
-
-        @Override
-        public void showNotificationIfAvailable(final Activity parent) {
-            if (Build.VERSION.SDK_INT < MPConfig.UI_FEATURES_MIN_API) {
-                return;
-            }
-
-            showGivenOrAvailableNotification(null, parent);
-        }
-
-        @Override
-        public void showNotificationById(int id, final Activity parent) {
-            final InAppNotification notif = mDecideMessages.getNotification(id, mConfig.getTestMode());
-            showGivenNotification(notif, parent);
-        }
-
-        @Override
-        public void showGivenNotification(final InAppNotification notif, final Activity parent) {
-            if (notif != null) {
-                showGivenOrAvailableNotification(notif, parent);
-            }
-        }
-
-        @Override
-        public void trackNotification(final String eventName, final InAppNotification notif, final JSONObject properties) {
-            JSONObject notificationProperties = notif.getCampaignProperties();
-            if (properties != null) {
-                try {
-                    Iterator<String> keyIterator = properties.keys();
-                    while (keyIterator.hasNext()) {
-                        String key = keyIterator.next();
-                        notificationProperties.put(key, properties.get(key));
-                    }
-                } catch (final JSONException e) {
-                    MPLog.e(LOGTAG, "Exception merging provided properties with notification properties", e);
-                }
-            }
-            track(eventName, notificationProperties);
-        }
-
-        @Override
-        public void joinExperimentIfAvailable() {
-            final JSONArray variants = mDecideMessages.getVariants();
-            mUpdatesFromMixpanel.setVariants(variants);
-        }
-
-        @Override
-        public void trackCharge(double amount, JSONObject properties) {
-            final Date now = new Date();
-            final DateFormat dateFormat = new SimpleDateFormat(ENGAGE_DATE_FORMAT_STRING, Locale.US);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-            try {
-                final JSONObject transactionValue = new JSONObject();
-                transactionValue.put("$amount", amount);
-                transactionValue.put("$time", dateFormat.format(now));
-
-                if (null != properties) {
-                    for (final Iterator<?> iter = properties.keys(); iter.hasNext();) {
-                        final String key = (String) iter.next();
-                        transactionValue.put(key, properties.get(key));
-                    }
-                }
-
-                this.append("$transactions", transactionValue);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception creating new charge", e);
-            }
-        }
-
-        /**
-         * Permanently clear the whole transaction history for the identified people profile.
-         */
-        @Override
-        public void clearCharges() {
-            this.unset("$transactions");
-        }
-
-        @Override
-        public void deleteUser() {
-            try {
-                final JSONObject message = stdPeopleMessage("$delete", JSONObject.NULL);
-                recordPeopleMessage(message);
-            } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception deleting a user");
-            }
-        }
-
-        @Override
-        public String getPushRegistrationId() {
-            return mPersistentIdentity.getPushId();
-        }
-
-        @Override
-        public void setPushRegistrationId(String registrationId) {
-            // Must be thread safe, will be called from a lot of different threads.
-            synchronized (mPersistentIdentity) {
-                if (mPersistentIdentity.getPeopleDistinctId() == null) {
-                    return;
-                }
-
-                mPersistentIdentity.storePushId(registrationId);
-                final JSONArray ids = new JSONArray();
-                ids.put(registrationId);
-                union("$android_devices", ids);
-            }
-        }
-
-        @Override
-        public void clearPushRegistrationId() {
-            mPersistentIdentity.clearPushId();
-            set("$android_devices", new JSONArray());
-        }
-
-        @Override
-        public void clearPushRegistrationId(String registrationId) {
-            if (registrationId == null) {
-                return;
-            }
-
-            if (registrationId.equals(mPersistentIdentity.getPushId())) {
-                mPersistentIdentity.clearPushId();
-            }
-            remove("$android_devices", registrationId);
-        }
-
-        @Override
-        public void initPushHandling(String senderID) {
-            if (! ConfigurationChecker.checkPushConfiguration(mContext) ) {
-                MPLog.i(LOGTAG, "Can't register for push notification services. Push notifications will not work.");
-                MPLog.i(LOGTAG, "See log tagged " + ConfigurationChecker.LOGTAG + " above for details.");
-            }
-            else { // Configuration is good for at least some push notifications
-                final String pushId = mPersistentIdentity.getPushId();
-                if (pushId == null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        registerForPushIdAPI21AndUp(senderID);
-                    } else {
-                        registerForPushIdAPI19AndOlder(senderID);
-                    }
-                } else {
-                    MixpanelAPI.allInstances(new InstanceProcessor() {
-                        @Override
-                        public void process(MixpanelAPI api) {
-                            MPLog.v(LOGTAG, "Using existing pushId " + pushId);
-                            api.getPeople().setPushRegistrationId(pushId);
-                        }
-                    });
-                }
-            }// endelse
-        }
-
-        @Override
-        public String getDistinctId() {
-            return mPersistentIdentity.getPeopleDistinctId();
-        }
-
-        @Override
-        public People withIdentity(final String distinctId) {
-            if (null == distinctId) {
-                return null;
-            }
-            return new PeopleImpl() {
-                @Override
-                public String getDistinctId() {
-                    return distinctId;
-                }
-
-                @Override
-                public void identify(String distinctId) {
-                    throw new RuntimeException("This MixpanelPeople object has a fixed, constant distinctId");
-                }
-            };
-        }
-
-        @Override
-        public void addOnMixpanelUpdatesReceivedListener(final OnMixpanelUpdatesReceivedListener listener) {
-            mUpdatesListener.addOnMixpanelUpdatesReceivedListener(listener);
-        }
-
-        @Override
-        public void removeOnMixpanelUpdatesReceivedListener(final OnMixpanelUpdatesReceivedListener listener) {
-            mUpdatesListener.removeOnMixpanelUpdatesReceivedListener(listener);
-        }
-
-        @Override
-        public void addOnMixpanelTweaksUpdatedListener(OnMixpanelTweaksUpdatedListener listener) {
-            if (null == listener) {
-                throw new NullPointerException("Listener cannot be null");
-            }
-
-            mUpdatesFromMixpanel.addOnMixpanelTweaksUpdatedListener(listener);
-        }
-
-        @Override
-        public void removeOnMixpanelTweaksUpdatedListener(OnMixpanelTweaksUpdatedListener listener) {
-            mUpdatesFromMixpanel.removeOnMixpanelTweaksUpdatedListener(listener);
-        }
-
-        private JSONObject stdPeopleMessage(String actionType, Object properties)
-                throws JSONException {
-            final JSONObject dataObj = new JSONObject();
-            final String distinctId = getDistinctId(); // TODO ensure getDistinctId is thread safe
-
-            dataObj.put(actionType, properties);
-            dataObj.put("$token", mToken);
-            dataObj.put("$time", System.currentTimeMillis());
-
-            if (null != distinctId) {
-                dataObj.put("$distinct_id", distinctId);
-            }
-
-            return dataObj;
-        }
-
-        @TargetApi(21)
-        private void registerForPushIdAPI21AndUp(String senderID) {
-            mMessages.registerForGCM(senderID);
-        }
-
-        @TargetApi(19)
-        private void registerForPushIdAPI19AndOlder(String senderID) {
-            try {
-                MPLog.v(LOGTAG, "Registering a new push id");
-                final Intent registrationIntent = new Intent("com.google.android.c2dm.intent.REGISTER");
-                registrationIntent.putExtra("app", PendingIntent.getBroadcast(mContext, 0, new Intent(), 0));
-                registrationIntent.putExtra("sender", senderID);
-                mContext.startService(registrationIntent);
-            } catch (final SecurityException e) {
-                MPLog.w(LOGTAG, "Error registering for push notifications", e);
-            }
-        }
-
-        private void showGivenOrAvailableNotification(final InAppNotification notifOrNull, final Activity parent) {
-            if (Build.VERSION.SDK_INT < MPConfig.UI_FEATURES_MIN_API) {
-                MPLog.v(LOGTAG, "Will not show notifications, os version is too low.");
-                return;
-            }
-
-            parent.runOnUiThread(new Runnable() {
-                @Override
-                @TargetApi(MPConfig.UI_FEATURES_MIN_API)
-                public void run() {
-                    final ReentrantLock lock = UpdateDisplayState.getLockObject();
-                    lock.lock();
-                    try {
-                        if (UpdateDisplayState.hasCurrentProposal()) {
-                            MPLog.v(LOGTAG, "DisplayState is locked, will not show notifications.");
-                            return; // Already being used.
-                        }
-
-                        InAppNotification toShow = notifOrNull;
-                        if (null == toShow) {
-                            toShow = getNotificationIfAvailable();
-                        }
-                        if (null == toShow) {
-                            MPLog.v(LOGTAG, "No notification available, will not show.");
-                            return; // Nothing to show
-                        }
-
-                        final InAppNotification.Type inAppType = toShow.getType();
-                        if (inAppType == InAppNotification.Type.TAKEOVER && !ConfigurationChecker.checkTakeoverInAppActivityAvailable(parent.getApplicationContext())) {
-                            MPLog.v(LOGTAG, "Application is not configured to show takeover notifications, none will be shown.");
-                            return; // Can't show due to config.
-                        }
-
-                        final int highlightColor = ActivityImageUtils.getHighlightColorFromBackground(parent);
-                        final UpdateDisplayState.DisplayState.InAppNotificationState proposal =
-                                new UpdateDisplayState.DisplayState.InAppNotificationState(toShow, highlightColor);
-                        final int intentId = UpdateDisplayState.proposeDisplay(proposal, getDistinctId(), mToken);
-                        if (intentId <= 0) {
-                            MPLog.e(LOGTAG, "DisplayState Lock in inconsistent state! Please report this issue to Mixpanel");
-                            return;
-                        }
-
-                        switch (inAppType) {
-                            case MINI: {
-                                final UpdateDisplayState claimed = UpdateDisplayState.claimDisplayState(intentId);
-                                if (null == claimed) {
-                                    MPLog.v(LOGTAG, "Notification's display proposal was already consumed, no notification will be shown.");
-                                    return; // Can't claim the display state
-                                }
-                                final InAppFragment inapp = new InAppFragment();
-                                inapp.setDisplayState(
-                                    MixpanelAPI.this,
-                                    intentId,
-                                    (UpdateDisplayState.DisplayState.InAppNotificationState) claimed.getDisplayState()
-                                );
-                                inapp.setRetainInstance(true);
-
-                                MPLog.v(LOGTAG, "Attempting to show mini notification.");
-                                final FragmentTransaction transaction = parent.getFragmentManager().beginTransaction();
-                                transaction.setCustomAnimations(0, R.animator.com_mixpanel_android_slide_down);
-                                transaction.add(android.R.id.content, inapp);
-
-                                try {
-                                    transaction.commit();
-                                } catch (IllegalStateException e) {
-                                    // if the app is in the background or the current activity gets killed, rendering the
-                                    // notifiction will lead to a crash
-                                    MPLog.v(LOGTAG, "Unable to show notification.");
-                                    mDecideMessages.markNotificationAsUnseen(toShow);
-                                }
-                            }
-                            break;
-                            case TAKEOVER: {
-                                MPLog.v(LOGTAG, "Sending intent for takeover notification.");
-
-                                final Intent intent = new Intent(parent.getApplicationContext(), TakeoverInAppActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                                intent.putExtra(TakeoverInAppActivity.INTENT_ID_KEY, intentId);
-                                parent.startActivity(intent);
-                            }
-                            break;
-                            default:
-                                MPLog.e(LOGTAG, "Unrecognized notification type " + inAppType + " can't be shown");
-                        }
-                        if (!mConfig.getTestMode()) {
-                            trackNotificationSeen(toShow);
-                        }
-                    } finally {
-                        lock.unlock();
-                    }
-                } // run()
-
-            });
-        }
-    }// PeopleImpl
-
-    private interface UpdatesListener extends DecideMessages.OnNewResultsListener {
-        public void addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
-        public void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener);
-    }
-
-    private class UnsupportedUpdatesListener implements UpdatesListener {
-        @Override
-        public void onNewResults() {
-            // Do nothing, these features aren't supported in older versions of the library
-        }
-
-        @Override
-        public void onNewConnectIntegrations() {
-            // Do nothing, not supported
-        }
-
-        @Override
-        public void addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener) {
-            // Do nothing, not supported
-        }
-
-        @Override
-        public void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener) {
-            // Do nothing, not supported
-        }
-    }
-
-    private class SupportedUpdatesListener implements UpdatesListener, Runnable {
-        @Override
-        public void onNewResults() {
-            mExecutor.execute(this);
-        }
-
-        @Override
-        public void onNewConnectIntegrations() {
-            mConnectIntegrations.setupIntegrations(mDecideMessages.getIntegrations());
-        }
-
-        @Override
-        public void addOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener) {
-            mListeners.add(listener);
-
-            if (mDecideMessages.hasUpdatesAvailable()) {
-                onNewResults();
-            }
-        }
-
-        @Override
-        public void removeOnMixpanelUpdatesReceivedListener(OnMixpanelUpdatesReceivedListener listener) {
-            mListeners.remove(listener);
-        }
-
-        @Override
-        public void run() {
-            // It's possible that by the time this has run the updates we detected are no longer
-            // present, which is ok.
-            for (final OnMixpanelUpdatesReceivedListener listener : mListeners) {
-                listener.onMixpanelUpdatesReceived();
-            }
-        }
-
-        private final Set<OnMixpanelUpdatesReceivedListener> mListeners = Collections.newSetFromMap(new ConcurrentHashMap<OnMixpanelUpdatesReceivedListener, Boolean>());
-        private final Executor mExecutor = Executors.newSingleThreadExecutor();
-    }
-
-    /* package */ class NoOpUpdatesFromMixpanel implements UpdatesFromMixpanel {
-        public NoOpUpdatesFromMixpanel(Tweaks tweaks) {
-            mTweaks = tweaks;
-        }
-
-        @Override
-        public void startUpdates() {
-            // No op
-        }
-
-        @Override
-        public void storeVariants(JSONArray variants) {
-            // No op
-        }
-
-        @Override
-        public void applyPersistedUpdates() {
-            // No op
-        }
-
-        @Override
-        public void setEventBindings(JSONArray bindings) {
-            // No op
-        }
-
-        @Override
-        public void setVariants(JSONArray variants) {
-            // No op
-        }
-
-        @Override
-        public Tweaks getTweaks() {
-            return mTweaks;
-        }
-
-        @Override
-        public void addOnMixpanelTweaksUpdatedListener(OnMixpanelTweaksUpdatedListener listener) {
-            // No op
-        }
-
-        @Override
-        public void removeOnMixpanelTweaksUpdatedListener(OnMixpanelTweaksUpdatedListener listener) {
-            // No op
-        }
-
-        private final Tweaks mTweaks;
-    }
-
     ////////////////////////////////////////////////////
-    protected void flushNoDecideCheck() {
-        mMessages.postToServer(new AnalyticsMessages.FlushDescription(mToken, false));
-    }
 
     protected void track(String eventName, JSONObject properties, boolean isAutomaticEvent) {
-        if (isAutomaticEvent && !mDecideMessages.shouldTrackAutomaticEvent()) {
+        if (isAutomaticEvent) {
             return;
         }
 
@@ -2095,9 +764,6 @@ public class MixpanelAPI {
                     new AnalyticsMessages.EventDescription(eventName, messageProps, mToken, isAutomaticEvent);
             mMessages.eventsMessage(eventDescription);
 
-            if (null != mTrackingDebug) {
-                mTrackingDebug.reportTrack(eventName);
-            }
         } catch (final JSONException e) {
             MPLog.e(LOGTAG, "Exception tracking event " + eventName, e);
         }
@@ -2194,13 +860,7 @@ public class MixpanelAPI {
     private final AnalyticsMessages mMessages;
     private final MPConfig mConfig;
     private final String mToken;
-    private final PeopleImpl mPeople;
-    private final UpdatesFromMixpanel mUpdatesFromMixpanel;
     private final PersistentIdentity mPersistentIdentity;
-    private final UpdatesListener mUpdatesListener;
-    private final TrackingDebug mTrackingDebug;
-    private final ConnectIntegrations mConnectIntegrations;
-    private final DecideMessages mDecideMessages;
     private final Map<String, String> mDeviceInfo;
     private final Map<String, Long> mEventTimings;
     private MixpanelActivityLifecycleCallbacks mMixpanelActivityLifecycleCallbacks;
@@ -2208,7 +868,6 @@ public class MixpanelAPI {
     // Maps each token to a singleton MixpanelAPI instance
     private static final Map<String, Map<Context, MixpanelAPI>> sInstanceMap = new HashMap<String, Map<Context, MixpanelAPI>>();
     private static final SharedPreferencesLoader sPrefsLoader = new SharedPreferencesLoader();
-    private static final Tweaks sSharedTweaks = new Tweaks();
     private static Future<SharedPreferences> sReferrerPrefs;
 
     private static final String LOGTAG = "MixpanelAPI.API";

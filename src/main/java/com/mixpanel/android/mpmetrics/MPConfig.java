@@ -225,32 +225,12 @@ public class MPConfig {
         mDataExpiration = metaData.getInt("com.mixpanel.android.MPConfig.DataExpiration", 1000 * 60 * 60 * 24 * 5); // 5 days default
         mMinimumDatabaseLimit = metaData.getInt("com.mixpanel.android.MPConfig.MinimumDatabaseLimit", 20 * 1024 * 1024); // 20 Mb
         mResourcePackageName = metaData.getString("com.mixpanel.android.MPConfig.ResourcePackageName"); // default is null
-        mDisableGestureBindingUI = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableGestureBindingUI", false);
-        mDisableEmulatorBindingUI = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableEmulatorBindingUI", false);
         mDisableAppOpenEvent = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableAppOpenEvent", true);
-        mDisableViewCrawler = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableViewCrawler", false);
         mDisableDecideChecker = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableDecideChecker", false);
-        mImageCacheMaxMemoryFactor = metaData.getInt("com.mixpanel.android.MPConfig.ImageCacheMaxMemoryFactor", 10);
-        mIgnoreInvisibleViewsEditor = metaData.getBoolean("com.mixpanel.android.MPConfig.IgnoreInvisibleViewsVisualEditor", false);
-        mAutoShowMixpanelUpdates = metaData.getBoolean("com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates", true);
-        mNotificationDefaults = metaData.getInt("com.mixpanel.android.MPConfig.NotificationDefaults", 0);
         mMinSessionDuration = metaData.getInt("com.mixpanel.android.MPConfig.MinimumSessionDuration", 10 * 1000); // 10 seconds
         mSessionTimeoutDuration = metaData.getInt("com.mixpanel.android.MPConfig.SessionTimeoutDuration", Integer.MAX_VALUE); // no timeout by default
         mUseIpAddressForGeolocation = metaData.getBoolean("com.mixpanel.android.MPConfig.UseIpAddressForGeolocation", true);
         mTestMode = metaData.getBoolean("com.mixpanel.android.MPConfig.TestMode", false);
-        mNotificationChannelImportance = metaData.getInt("com.mixpanel.android.MPConfig.NotificationChannelImportance", 3); // NotificationManger.IMPORTANCE_DEFAULT
-
-        String notificationChannelId = metaData.getString("com.mixpanel.android.MPConfig.NotificationChannelId");
-        if (notificationChannelId == null) {
-            notificationChannelId = "mp";
-        }
-        mNotificationChannelId = notificationChannelId;
-
-        String notificationChannelName = metaData.getString("com.mixpanel.android.MPConfig.NotificationChannelName");
-        if (notificationChannelName == null) {
-            notificationChannelName = SystemInformation.getInstance(context).getAppName();
-        }
-        mNotificationChannelName = notificationChannelName;
 
         String eventsEndpoint = metaData.getString("com.mixpanel.android.MPConfig.EventsEndpoint");
         if (null == eventsEndpoint) {
@@ -258,57 +238,18 @@ public class MPConfig {
         }
         mEventsEndpoint = eventsEndpoint;
 
-        String peopleEndpoint = metaData.getString("com.mixpanel.android.MPConfig.PeopleEndpoint");
-        if (null == peopleEndpoint) {
-            peopleEndpoint = "https://api.mixpanel.com/engage";
-        }
-        mPeopleEndpoint = peopleEndpoint;
-
-        String decideEndpoint = metaData.getString("com.mixpanel.android.MPConfig.DecideEndpoint");
-        if (null == decideEndpoint) {
-            decideEndpoint = "https://decide.mixpanel.com/decide";
-        }
-        mDecideEndpoint = decideEndpoint;
-
-        String editorUrl = metaData.getString("com.mixpanel.android.MPConfig.EditorUrl");
-        if (null == editorUrl) {
-            editorUrl = "wss://switchboard.mixpanel.com/connect/";
-        }
-        mEditorUrl = editorUrl;
-
-        int resourceId = metaData.getInt("com.mixpanel.android.MPConfig.DisableViewCrawlerForProjects", -1);
-        if (resourceId != -1) {
-            mDisableViewCrawlerForProjects = context.getResources().getStringArray(resourceId);
-        } else {
-            mDisableViewCrawlerForProjects = new String[0];
-        }
-
         MPLog.v(LOGTAG,
                 "Mixpanel (" + VERSION + ") configured with:\n" +
-                "    AutoShowMixpanelUpdates " + getAutoShowMixpanelUpdates() + "\n" +
                 "    BulkUploadLimit " + getBulkUploadLimit() + "\n" +
                 "    FlushInterval " + getFlushInterval() + "\n" +
                 "    DataExpiration " + getDataExpiration() + "\n" +
                 "    MinimumDatabaseLimit " + getMinimumDatabaseLimit() + "\n" +
                 "    DisableAppOpenEvent " + getDisableAppOpenEvent() + "\n" +
-                "    DisableViewCrawler " + getDisableViewCrawler() + "\n" +
-                "    DisableGestureBindingUI " + getDisableGestureBindingUI() + "\n" +
-                "    DisableEmulatorBindingUI " + getDisableEmulatorBindingUI() + "\n" +
                 "    EnableDebugLogging " + DEBUG + "\n" +
                 "    TestMode " + getTestMode() + "\n" +
                 "    EventsEndpoint " + getEventsEndpoint() + "\n" +
-                "    PeopleEndpoint " + getPeopleEndpoint() + "\n" +
-                "    DecideEndpoint " + getDecideEndpoint() + "\n" +
-                "    EditorUrl " + getEditorUrl() + "\n" +
-                "    ImageCacheMaxMemoryFactor " + getImageCacheMaxMemoryFactor() + "\n" +
-                "    DisableDecideChecker " + getDisableDecideChecker() + "\n" +
-                "    IgnoreInvisibleViewsEditor " + getIgnoreInvisibleViewsEditor() + "\n" +
-                "    NotificationDefaults " + getNotificationDefaults() + "\n" +
                 "    MinimumSessionDuration: " + getMinimumSessionDuration() + "\n" +
-                "    SessionTimeoutDuration: " + getSessionTimeoutDuration() + "\n" +
-                "    NotificationChannelId: " + getNotificationChannelId() + "\n" +
-                "    NotificationChannelName: " + getNotificationChannelName() + "\n" +
-                "    NotificationChannelImportance: " + getNotificationChannelImportance()
+                        "    SessionTimeoutDuration: " + getSessionTimeoutDuration() + "\n"
         );
     }
 
@@ -329,23 +270,9 @@ public class MPConfig {
 
     public int getMinimumDatabaseLimit() { return mMinimumDatabaseLimit; }
 
-    public boolean getDisableGestureBindingUI() {
-        return mDisableGestureBindingUI;
-    }
-
-    public boolean getDisableEmulatorBindingUI() {
-        return mDisableEmulatorBindingUI;
-    }
-
     public boolean getDisableAppOpenEvent() {
         return mDisableAppOpenEvent;
     }
-
-    public boolean getDisableViewCrawler() {
-        return mDisableViewCrawler;
-    }
-
-    public String[] getDisableViewCrawlerForProjects() { return mDisableViewCrawlerForProjects; }
 
     public boolean getTestMode() {
         return mTestMode;
@@ -356,36 +283,8 @@ public class MPConfig {
         return mEventsEndpoint;
     }
 
-    // Preferred URL for tracking people
-    public String getPeopleEndpoint() {
-        return mPeopleEndpoint;
-    }
-
-    // Preferred URL for pulling decide data
-    public String getDecideEndpoint() {
-        return mDecideEndpoint;
-    }
-
-    // Check for and show eligible in app notifications on Activity changes
-    public boolean getAutoShowMixpanelUpdates() {
-        return mAutoShowMixpanelUpdates;
-    }
-
-    // Preferred URL for connecting to the editor websocket
-    public String getEditorUrl() {
-        return mEditorUrl;
-    }
-
     public boolean getDisableDecideChecker() {
         return mDisableDecideChecker;
-    }
-
-    public boolean getIgnoreInvisibleViewsEditor() {
-        return mIgnoreInvisibleViewsEditor;
-    }
-
-    public int getNotificationDefaults() {
-        return mNotificationDefaults;
     }
 
     public int getMinimumSessionDuration() {
@@ -394,18 +293,6 @@ public class MPConfig {
 
     public int getSessionTimeoutDuration() {
         return mSessionTimeoutDuration;
-    }
-
-    public String getNotificationChannelId() {
-        return mNotificationChannelId;
-    }
-
-    public String getNotificationChannelName() {
-        return mNotificationChannelName;
-    }
-
-    public int getNotificationChannelImportance() {
-        return mNotificationChannelImportance;
     }
 
     // Pre-configured package name for resources, if they differ from the application package name
@@ -434,11 +321,6 @@ public class MPConfig {
         return mOfflineMode;
     }
 
-    // ImageStore LRU Cache size will be availableMaxMemory() / mImageCacheMaxMemoryFactor
-    public int getImageCacheMaxMemoryFactor() {
-        return mImageCacheMaxMemoryFactor;
-    }
-
     ///////////////////////////////////////////////
 
     // Package access for testing only- do not call directly in library code
@@ -461,27 +343,13 @@ public class MPConfig {
     private final int mDataExpiration;
     private final int mMinimumDatabaseLimit;
     private final boolean mTestMode;
-    private final boolean mDisableGestureBindingUI;
-    private final boolean mDisableEmulatorBindingUI;
     private final boolean mDisableAppOpenEvent;
-    private final boolean mDisableViewCrawler;
-    private final String[] mDisableViewCrawlerForProjects;
     private final String mEventsEndpoint;
-    private final String mPeopleEndpoint;
-    private final String mDecideEndpoint;
-    private final boolean mAutoShowMixpanelUpdates;
-    private final String mEditorUrl;
     private final String mResourcePackageName;
     private final boolean mDisableDecideChecker;
-    private final int mImageCacheMaxMemoryFactor;
-    private final boolean mIgnoreInvisibleViewsEditor;
-    private final int mNotificationDefaults;
     private final int mMinSessionDuration;
     private final int mSessionTimeoutDuration;
     private final boolean mUseIpAddressForGeolocation;
-    private final int mNotificationChannelImportance;
-    private final String mNotificationChannelId;
-    private final String mNotificationChannelName;
 
     // Mutable, with synchronized accessor and mutator
     private SSLSocketFactory mSSLSocketFactory;

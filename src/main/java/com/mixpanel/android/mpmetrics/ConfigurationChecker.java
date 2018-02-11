@@ -1,20 +1,12 @@
 package com.mixpanel.android.mpmetrics;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
 import android.os.Build;
 
-import com.mixpanel.android.takeoverinapp.TakeoverInAppActivity;
 import com.mixpanel.android.util.MPLog;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /*
  * Copyright 2012 Google Inc.
@@ -129,32 +121,6 @@ import java.util.Set;
             return false;
         }
 
-        final ActivityInfo[] receivers = receiversInfo.receivers;
-        if (receivers == null || receivers.length == 0) {
-            MPLog.w(LOGTAG, "No receiver for package " + packageName);
-            MPLog.i(LOGTAG, "You can fix this with the following into your <application> tag:\n" +
-                            samplePushConfigurationMessage(packageName));
-            return false;
-        }
-
-        final Set<String> allowedReceivers = new HashSet<String>();
-        for (final ActivityInfo receiver : receivers) {
-            if ("com.google.android.c2dm.permission.SEND".equals(receiver.permission)) {
-                allowedReceivers.add(receiver.name);
-            }
-        }
-
-        if (allowedReceivers.isEmpty()) {
-            MPLog.w(LOGTAG, "No receiver allowed to receive com.google.android.c2dm.permission.SEND");
-            MPLog.i(LOGTAG, "You can fix by pasting the following into the <application> tag in your AndroidManifest.xml:\n" +
-                    samplePushConfigurationMessage(packageName));
-            return false;
-        }
-
-        if (!checkReceiver(context, allowedReceivers, "com.google.android.c2dm.intent.RECEIVE")) {
-            return false;
-        }
-
         boolean canRegisterWithPlayServices = false;
         try {
             Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
@@ -164,77 +130,7 @@ import java.util.Set;
             MPLog.i(LOGTAG, "You can fix this by adding com.google.android.gms:play-services as a dependency of your gradle or maven project");
         }
 
-        boolean canRegisterWithRegistrationIntent = true;
-        if (!checkReceiver(context, allowedReceivers, "com.google.android.c2dm.intent.REGISTRATION")) {
-            MPLog.i(LOGTAG, "(You can still receive push notifications on Lollipop/API 21 or greater with this configuration)");
-            canRegisterWithRegistrationIntent = false;
-        }
-
-        return canRegisterWithPlayServices || canRegisterWithRegistrationIntent;
+        return canRegisterWithPlayServices;
     }
 
-    public static boolean checkTakeoverInAppActivityAvailable(Context context) {
-        if (mTakeoverActivityAvailable == null) {
-            if (Build.VERSION.SDK_INT < MPConfig.UI_FEATURES_MIN_API) {
-                // No need to log, TakeoverInAppActivity doesn't work on this platform.
-                mTakeoverActivityAvailable = false;
-                return mTakeoverActivityAvailable;
-            }
-
-            final Intent takeoverInAppIntent = new Intent(context, TakeoverInAppActivity.class);
-            takeoverInAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            takeoverInAppIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-
-            final PackageManager packageManager = context.getPackageManager();
-            final List<ResolveInfo> intentActivities = packageManager.queryIntentActivities(takeoverInAppIntent, 0);
-            if (intentActivities.size() == 0) {
-                MPLog.w(LOGTAG, TakeoverInAppActivity.class.getName() + " is not registered as an activity in your application, so takeover in-apps can't be shown.");
-                MPLog.i(LOGTAG, "Please add the child tag <activity android:name=\"com.mixpanel.android.takeoverinapp.TakeoverInAppActivity\" /> to your <application> tag.");
-                mTakeoverActivityAvailable = false;
-                return mTakeoverActivityAvailable;
-            }
-
-            mTakeoverActivityAvailable = true;
-        }
-
-        return mTakeoverActivityAvailable;
-    }
-
-    private static String samplePushConfigurationMessage(String packageName) {
-        return
-        "<receiver android:name=\"com.mixpanel.android.mpmetrics.GCMReceiver\"\n" +
-        "          android:permission=\"com.google.android.c2dm.permission.SEND\" >\n" +
-        "    <intent-filter>\n" +
-        "       <action android:name=\"com.google.android.c2dm.intent.RECEIVE\" />\n" +
-        "       <action android:name=\"com.google.android.c2dm.intent.REGISTRATION\" />\n" +
-        "       <category android:name=\"" + packageName + "\" />\n" +
-        "    </intent-filter>\n" +
-        "</receiver>";
-    }
-
-    private static boolean checkReceiver(Context context, Set<String> allowedReceivers, String action) {
-        final PackageManager pm = context.getPackageManager();
-        final String packageName = context.getPackageName();
-        final Intent intent = new Intent(action);
-        intent.setPackage(packageName);
-        final List<ResolveInfo> receivers = pm.queryBroadcastReceivers(intent, PackageManager.GET_META_DATA);
-
-        if (receivers.isEmpty()) {
-            MPLog.w(LOGTAG, "No receivers for action " + action);
-            MPLog.i(LOGTAG, "You can fix by pasting the following into the <application> tag in your AndroidManifest.xml:\n" +
-                    samplePushConfigurationMessage(packageName));
-            return false;
-        }
-        // make sure receivers match
-        for (final ResolveInfo receiver : receivers) {
-            final String name = receiver.activityInfo.name;
-            if (!allowedReceivers.contains(name)) {
-                MPLog.w(LOGTAG, "Receiver " + name + " is not set with permission com.google.android.c2dm.permission.SEND");
-                MPLog.i(LOGTAG, "Please add the attribute 'android:permission=\"com.google.android.c2dm.permission.SEND\"' to your <receiver> tag");
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

@@ -10,12 +10,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.mixpanel.android.viewcrawler.GestureTracker;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -39,11 +36,6 @@ import java.util.Locale;
     @Override
     public void onActivityStarted(Activity activity) {
         trackCampaignOpenedIfNeeded(activity.getIntent());
-
-        if (android.os.Build.VERSION.SDK_INT >= MPConfig.UI_FEATURES_MIN_API && mConfig.getAutoShowMixpanelUpdates()) {
-            mMpInstance.getPeople().showNotificationIfAvailable(activity);
-        }
-        new GestureTracker(mMpInstance, activity);
     }
 
     @Override
@@ -89,10 +81,6 @@ import java.util.Locale;
 
     @Override
     public void onActivityResumed(Activity activity) {
-        if (android.os.Build.VERSION.SDK_INT >= MPConfig.UI_FEATURES_MIN_API && mConfig.getAutoShowMixpanelUpdates()) {
-            mMpInstance.getPeople().joinExperimentIfAvailable();
-        }
-
         mPaused = false;
         boolean wasBackground = !mIsForeground;
         mIsForeground = true;

@@ -1,13 +1,5 @@
 package com.mixpanel.android.mpmetrics;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -16,6 +8,14 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.mixpanel.android.util.MPLog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * SQLite database adapter for MixpanelAPI.
@@ -29,8 +29,7 @@ import com.mixpanel.android.util.MPLog;
     private static final Map<Context, MPDbAdapter> sInstances = new HashMap<>();
 
     public enum Table {
-        EVENTS ("events"),
-        PEOPLE ("people");
+        EVENTS("events");
 
         Table(String name) {
             mTableName = name;
@@ -61,17 +60,8 @@ import com.mixpanel.android.util.MPLog;
         KEY_CREATED_AT + " INTEGER NOT NULL, " +
         KEY_AUTOMATIC_DATA + " INTEGER DEFAULT 0, " +
         KEY_TOKEN + " STRING NOT NULL DEFAULT '')";
-    private static final String CREATE_PEOPLE_TABLE =
-       "CREATE TABLE " + Table.PEOPLE.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-        KEY_DATA + " STRING NOT NULL, " +
-        KEY_CREATED_AT + " INTEGER NOT NULL, " +
-        KEY_AUTOMATIC_DATA + " INTEGER DEFAULT 0, " +
-        KEY_TOKEN + " STRING NOT NULL DEFAULT '')";
     private static final String EVENTS_TIME_INDEX =
         "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.EVENTS.getName() +
-        " (" + KEY_CREATED_AT + ");";
-    private static final String PEOPLE_TIME_INDEX =
-        "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.PEOPLE.getName() +
         " (" + KEY_CREATED_AT + ");";
 
     private final MPDatabaseHelper mDb;
@@ -96,9 +86,7 @@ import com.mixpanel.android.util.MPLog;
             MPLog.v(LOGTAG, "Creating a new Mixpanel events DB");
 
             db.execSQL(CREATE_EVENTS_TABLE);
-            db.execSQL(CREATE_PEOPLE_TABLE);
             db.execSQL(EVENTS_TIME_INDEX);
-            db.execSQL(PEOPLE_TIME_INDEX);
         }
 
         @Override
@@ -109,11 +97,8 @@ import com.mixpanel.android.util.MPLog;
                 migrateTableFrom4To5(db);
             } else {
                 db.execSQL("DROP TABLE IF EXISTS " + Table.EVENTS.getName());
-                db.execSQL("DROP TABLE IF EXISTS " + Table.PEOPLE.getName());
                 db.execSQL(CREATE_EVENTS_TABLE);
-                db.execSQL(CREATE_PEOPLE_TABLE);
                 db.execSQL(EVENTS_TIME_INDEX);
-                db.execSQL(PEOPLE_TIME_INDEX);
             }
         }
 
@@ -126,9 +111,7 @@ import com.mixpanel.android.util.MPLog;
 
         private void migrateTableFrom4To5(SQLiteDatabase db) {
             db.execSQL("ALTER TABLE " + Table.EVENTS.getName() + " ADD COLUMN " + KEY_AUTOMATIC_DATA + " INTEGER DEFAULT 0");
-            db.execSQL("ALTER TABLE " + Table.PEOPLE.getName() + " ADD COLUMN " + KEY_AUTOMATIC_DATA + " INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE " + Table.EVENTS.getName() + " ADD COLUMN " + KEY_TOKEN + " STRING NOT NULL DEFAULT ''");
-            db.execSQL("ALTER TABLE " + Table.PEOPLE.getName() + " ADD COLUMN " + KEY_TOKEN + " STRING NOT NULL DEFAULT ''");
 
             Cursor eventsCursor = db.rawQuery("SELECT * FROM " + Table.EVENTS.getName(), null);
             while (eventsCursor.moveToNext()) {
@@ -143,18 +126,6 @@ import com.mixpanel.android.util.MPLog;
                 }
             }
 
-            Cursor peopleCursor = db.rawQuery("SELECT * FROM " + Table.PEOPLE.getName(), null);
-            while (peopleCursor.moveToNext()) {
-                int rowId = 0;
-                try {
-                    final JSONObject j = new JSONObject(peopleCursor.getString(peopleCursor.getColumnIndex(KEY_DATA)));
-                    String token = j.getString("$token");
-                    rowId = peopleCursor.getInt(peopleCursor.getColumnIndex("_id"));
-                    db.execSQL("UPDATE " + Table.PEOPLE.getName() + " SET " + KEY_TOKEN + " = '" + token + "' WHERE _id = " + rowId);
-                } catch (final JSONException e) {
-                    db.delete(Table.PEOPLE.getName(), "_id = " + rowId, null);
-                }
-            }
         }
 
         private final File mDatabaseFile;
@@ -299,7 +270,6 @@ import com.mixpanel.android.util.MPLog;
      */
     public synchronized void cleanupAutomaticEvents(String token) {
         cleanupAutomaticEvents(Table.EVENTS, token);
-        cleanupAutomaticEvents(Table.PEOPLE, token);
     }
 
     private void cleanupAutomaticEvents(Table table, String token) {

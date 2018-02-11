@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.test.AndroidTestCase;
 import android.util.Base64;
 
-import com.mixpanel.android.util.ImageStore;
 import com.mixpanel.android.util.OfflineMode;
 import com.mixpanel.android.util.RemoteService;
 
