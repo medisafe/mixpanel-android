@@ -239,6 +239,65 @@ public class MixpanelAPI {
     }
 
     /**
+     * Get the instance of MixpanelAPI associated with your Mixpanel project token.
+     * <p>
+     * <p>Use getInstance to get a reference to a shared
+     * instance of MixpanelAPI you can use to send events
+     * and People Analytics updates to Mixpanel.</p>
+     * <p>getInstance is thread safe, but the returned instance is not,
+     * and may be shared with other callers of getInstance.
+     * The best practice is to call getInstance, and use the returned MixpanelAPI,
+     * object from a single thread (probably the main UI thread of your application).</p>
+     * <p>If you do choose to track events from multiple threads in your application,
+     * you should synchronize your calls on the instance itself, like so:</p>
+     * <pre>
+     * {@code
+     * MixpanelAPI instance = MixpanelAPI.getInstance(context, token);
+     * synchronized(instance) { // Only necessary if the instance will be used in multiple threads.
+     *     instance.track(...)
+     * }
+     * }
+     * </pre>
+     *
+     * @param context The application context you are tracking
+     * @param token   Your Mixpanel project token. You can get your project token on the Mixpanel
+     *               web site,
+     *                in the settings dialog.
+     * @param config  Your Mixpanel project configuration.
+     * @return an instance of MixpanelAPI associated with your project
+     */
+    public static MixpanelAPI getInstance(Context context, String token, MPConfig config) {
+        if (null == token || null == context) {
+            return null;
+        }
+        synchronized (sInstanceMap) {
+            final Context appContext = context.getApplicationContext();
+
+            if (null == sReferrerPrefs) {
+                sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPConfig
+                        .REFERRER_PREFS_NAME, null);
+            }
+
+            Map<Context, MixpanelAPI> instances = sInstanceMap.get(token);
+            if (null == instances) {
+                instances = new HashMap<Context, MixpanelAPI>();
+                sInstanceMap.put(token, instances);
+            }
+
+            MixpanelAPI instance = instances.get(appContext);
+            if (null == instance && ConfigurationChecker.checkBasicConfiguration(appContext)) {
+                instance = new MixpanelAPI(appContext, sReferrerPrefs, token, config);
+                registerAppLinksListeners(context, instance);
+                instances.put(appContext, instance);
+            }
+
+            checkIntentForInboundAppLink(context);
+
+            return instance;
+        }
+    }
+
+    /**
      * This call is a no-op, and will be removed in future versions.
      *
      * @deprecated in 4.0.0, use com.mixpanel.android.MPConfig.FlushInterval application metadata instead
