@@ -6,8 +6,8 @@ import android.os.Bundle;
 import android.test.AndroidTestCase;
 
 import com.mixpanel.android.util.Base64Coder;
-import com.mixpanel.android.util.RemoteService;
 import com.mixpanel.android.util.HttpService;
+import com.mixpanel.android.util.RemoteService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -102,11 +102,6 @@ public class HttpTest extends AndroidTestCase {
         };
 
         final MPConfig config = new MPConfig(new Bundle(), getContext()) {
-            @Override
-            public String getDecideEndpoint() {
-                return "DECIDE ENDPOINT";
-            }
-
             @Override
             public String getEventsEndpoint() {
                 return "EVENTS ENDPOINT";

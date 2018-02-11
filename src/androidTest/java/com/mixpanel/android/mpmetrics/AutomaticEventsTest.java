@@ -122,17 +122,7 @@ public class AutomaticEventsTest extends AndroidTestCase {
                         final HandlerThread thread = new HandlerThread("com.mixpanel.android.AnalyticsWorker", Process.THREAD_PRIORITY_BACKGROUND);
                         thread.start();
                         final Handler ret = new AnalyticsMessageHandler(thread.getLooper()) {
-                            @Override
-                            protected DecideChecker createDecideChecker() {
-                                return new DecideChecker(mContext, mConfig) {
-                                    @Override
-                                    public void runDecideCheck(String token, RemoteService poster) throws RemoteService.ServiceUnavailableException {
-                                        if (mCanRunDecide) {
-                                            super.runDecideCheck(token, poster);
-                                        }
-                                    }
-                                };
-                            }
+
                         };
                         return ret;
                     }
@@ -281,17 +271,7 @@ public class AutomaticEventsTest extends AndroidTestCase {
                         final HandlerThread thread = new HandlerThread("com.mixpanel.android.AnalyticsWorker", Process.THREAD_PRIORITY_BACKGROUND);
                         thread.start();
                         final Handler ret = new AnalyticsMessageHandler(thread.getLooper()) {
-                            @Override
-                            protected DecideChecker createDecideChecker() {
-                                return new DecideChecker(mContext, mConfig) {
-                                    @Override
-                                    public void runDecideCheck(String token, RemoteService poster) throws RemoteService.ServiceUnavailableException {
-                                        if (mCanRunSecondDecideInstance) {
-                                            super.runDecideCheck(token, poster);
-                                        }
-                                    }
-                                };
-                            }
+
                         };
                         return ret;
                     }
