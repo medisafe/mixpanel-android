@@ -773,10 +773,6 @@ public class MixpanelAPI {
     ////////////////////////////////////////////////////
 
     protected void track(String eventName, JSONObject properties, boolean isAutomaticEvent) {
-        if (isAutomaticEvent) {
-            return;
-        }
-
         final Long eventBegin;
         synchronized (mEventTimings) {
             eventBegin = mEventTimings.get(eventName);
