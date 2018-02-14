@@ -115,7 +115,7 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class MPLConfig {
 
-    public static final String VERSION = BuildConfig.MIXPANEL_VERSION;
+    public static final String VERSION = BuildConfig.MIXPANEL_LITE_VERSION;
 
     public static boolean DEBUG = false;
 

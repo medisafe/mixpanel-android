@@ -11,8 +11,6 @@ import android.util.DisplayMetrics;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.android.gms.iid.InstanceID;
 import com.mixpanel.android.util.Base64Coder;
 import com.mixpanel.android.util.HttpService;
 import com.mixpanel.android.util.MPLLog;
@@ -331,46 +329,6 @@ import javax.net.ssl.SSLSocketFactory;
 
             protected long getTrackEngageRetryAfter() {
                 return mTrackEngageRetryAfter;
-            }
-
-            private void runGCMRegistration(String senderID) {
-                final String registrationId;
-                try {
-                    // We don't actually require Google Play Services to be available
-                    // (since we can't specify what version customers will be using,
-                    // and because the latest Google Play Services actually have
-                    // dependencies on Java 7)
-
-                    // Consider adding a transitive dependency on the latest
-                    // Google Play Services version and requiring Java 1.7
-                    // in the next major library release.
-                    try {
-                        final int resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(mContext);
-                        if (resultCode != ConnectionResult.SUCCESS) {
-                            MPLLog.i(LOGTAG, "Can't register for push notifications, Google Play Services are not installed.");
-                            return;
-                        }
-                    } catch (RuntimeException e) {
-                        MPLLog.i(LOGTAG, "Can't register for push notifications, Google Play services are not configured.");
-                        return;
-                    }
-
-                    InstanceID instanceID = InstanceID.getInstance(mContext);
-                    registrationId = instanceID.getToken(senderID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-                } catch (IOException e) {
-                    MPLLog.i(LOGTAG, "Exception when trying to register for GCM", e);
-                    return;
-                } catch (NoClassDefFoundError e) {
-                    MPLLog.w(LOGTAG, "Google play services were not part of this build, push notifications cannot be registered or delivered");
-                    return;
-                }
-
-                MixpanelLiteAPI.allInstances(new MixpanelLiteAPI.InstanceProcessor() {
-                    @Override
-                    public void process(MixpanelLiteAPI api) {
-                        MPLLog.v(LOGTAG, "Using existing pushId " + registrationId);
-                    }
-                });
             }
 
             private void sendAllData(MPLDbAdapter dbAdapter, String token) {

@@ -30,7 +30,7 @@ android {
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
         consumerProguardFiles 'proguard.txt'
 
-        buildConfigField "String", "MIXPANEL_VERSION", "\"${version}\""
+        buildConfigField "String", "MIXPANEL_LITE_VERSION", "\"${version}\""
 
         lintOptions {
             abortOnError true
