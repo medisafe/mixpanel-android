@@ -184,5 +184,5 @@ public class HttpService implements RemoteService {
         return buffer.toByteArray();
     }
 
-    private static final String LOGTAG = "MixpanelAPI.Message";
+    private static final String LOGTAG = "MixpanelLiteAPI.Message";
 }

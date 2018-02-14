@@ -850,8 +850,7 @@ public class MixpanelLiteAPI {
                 final JSONObject message = records.getJSONObject(i);
                 mMessages.peopleMessage(new AnalyticsMessages.PeopleDescription(message, mToken));
             } catch (final JSONException e) {
-                MPLLog.e(LOGTAG, "Malformed people record stored pending identity, will not send " +
-                        "it.", e);
+                MPLLog.e(LOGTAG, "Malformed people record stored pending identity, will not send it.", e);
             }
         }
     }
@@ -883,11 +882,9 @@ public class MixpanelLiteAPI {
         } catch (final InvocationTargetException e) {
             MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke LocalBroadcastManager.registerReceiver() -- App Links tracking will not be enabled due to this exception", e);
         } catch (final ClassNotFoundException e) {
-            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be " +
-                    "installed: " + e.getMessage());
+            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be installed: " + e.getMessage());
         } catch (final NoSuchMethodException e) {
-            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be " +
-                    "installed: " + e.getMessage());
+            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be installed: " + e.getMessage());
         } catch (final IllegalAccessException e) {
             MPLLog.d(APP_LINKS_LOGTAG, "App Links tracking will not be enabled due to this exception: " + e.getMessage());
         }
@@ -904,11 +901,9 @@ public class MixpanelLiteAPI {
                 final Method getTargetUrlFromInboundIntent = clazz.getMethod("getTargetUrlFromInboundIntent", Context.class, Intent.class);
                 getTargetUrlFromInboundIntent.invoke(null, context, intent);
             } catch (final InvocationTargetException e) {
-                MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke bolts.AppLinks" +
-                        ".getTargetUrlFromInboundIntent() -- Unable to detect inbound App Links", e);
+                MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke bolts.AppLinks.getTargetUrlFromInboundIntent() -- Unable to detect inbound App Links", e);
             } catch (final ClassNotFoundException e) {
-                MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track " +
-                        "App Links: " + e.getMessage());
+                MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
             } catch (final NoSuchMethodException e) {
                 MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
             } catch (final IllegalAccessException e) {
@@ -933,7 +928,7 @@ public class MixpanelLiteAPI {
     private static final SharedPreferencesLoader sPrefsLoader = new SharedPreferencesLoader();
     private static Future<SharedPreferences> sReferrerPrefs;
 
-    private static final String LOGTAG = "MixpanelAPI.API";
-    private static final String APP_LINKS_LOGTAG = "MixpanelAPI.AL";
+    private static final String LOGTAG = "MixpanelLiteAPI.API";
+    private static final String APP_LINKS_LOGTAG = "MixpanelLiteAPI.AL";
     private static final String ENGAGE_DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss";
 }

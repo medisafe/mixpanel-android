@@ -119,12 +119,6 @@ public class MPLConfig {
 
     public static boolean DEBUG = false;
 
-    /**
-     * Minimum API level for support of rich UI features, like In-App notifications and dynamic event binding.
-     * Devices running OS versions below this level will still support tracking and push notification features.
-     */
-    public static final int UI_FEATURES_MIN_API = 16;
-
     // Name for persistent storage of app referral SharedPreferences
     /* package */ static final String REFERRER_PREFS_NAME = "com.mixpanellite.android.mpmetrics" +
             ".ReferralInfo";
@@ -361,5 +355,5 @@ public class MPLConfig {
 
     private static MPLConfig sInstance;
     private static final Object sInstanceLock = new Object();
-    private static final String LOGTAG = "MixpanelAPI.Conf";
+    private static final String LOGTAG = "MixpanelLiteAPI.Conf";
 }

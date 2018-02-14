@@ -32,7 +32,7 @@ import com.mixpanel.android.util.MPLLog;
 
 /* package */ class ConfigurationChecker {
 
-    public static String LOGTAG = "MixpanelAPI.ConfigurationChecker";
+    public static String LOGTAG = "MixpanelLiteAPI.ConfigurationChecker";
 
     private static Boolean mTakeoverActivityAvailable;
 

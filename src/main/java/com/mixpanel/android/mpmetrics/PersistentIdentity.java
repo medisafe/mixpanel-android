@@ -616,5 +616,5 @@ import java.util.concurrent.Future;
     private static boolean sReferrerPrefsDirty = true;
     private static final Object sReferrerPrefsLock = new Object();
     private static final String DELIMITER = ",";
-    private static final String LOGTAG = "MixpanelAPI.PIdentity";
+    private static final String LOGTAG = "MixpanelLiteAPI.PIdentity";
 }

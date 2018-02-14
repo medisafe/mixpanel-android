@@ -25,7 +25,7 @@ import java.util.Map;
  *
  */
 /* package */ class MPLDbAdapter {
-    private static final String LOGTAG = "MixpanelAPI.Database";
+    private static final String LOGTAG = "MixpanelLiteAPI.Database";
     private static final Map<Context, MPLDbAdapter> sInstances = new HashMap<>();
 
     public enum Table {

@@ -622,7 +622,7 @@ import javax.net.ssl.SSLSocketFactory;
     private static final int INSTALL_DECIDE_CHECK = 12; // Run this DecideCheck at intervals until it isDestroyed()
     private static final int REGISTER_FOR_GCM = 13; // Register for GCM using Google Play Services
 
-    private static final String LOGTAG = "MixpanelAPI.Messages";
+    private static final String LOGTAG = "MixpanelLiteAPI.Messages";
 
     private static final Map<Context, AnalyticsMessages> sInstances = new HashMap<Context, AnalyticsMessages>();
 

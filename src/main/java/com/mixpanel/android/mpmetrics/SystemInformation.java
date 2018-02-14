@@ -207,5 +207,5 @@ import java.lang.reflect.Method;
     private static SystemInformation sInstance;
     private static final Object sInstanceLock = new Object();
 
-    private static final String LOGTAG = "MixpanelAPI.SysInfo";
+    private static final String LOGTAG = "MixpanelLiteAPI.SysInfo";
 }

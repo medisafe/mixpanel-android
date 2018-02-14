@@ -146,5 +146,5 @@ public abstract class ResourceReader implements ResourceIds {
     private final SparseArray<String> mIdToIdName;
 
     @SuppressWarnings("unused")
-    private static final String LOGTAG = "MixpanelAPI.RsrcReader";
+    private static final String LOGTAG = "MixpanelLiteAPI.RsrcReader";
 }
