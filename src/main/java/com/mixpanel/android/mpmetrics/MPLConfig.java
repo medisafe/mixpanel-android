@@ -25,90 +25,90 @@ import javax.net.ssl.SSLSocketFactory;
  * Mixpanel understands the following options:
  *
  * <dl>
- *     <dt>com.mixpanel.android.MPConfig.EnableDebugLogging</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.EnableDebugLogging</dt>
  *     <dd>A boolean value. If true, emit more detailed log messages. Defaults to false</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.BulkUploadLimit</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.BulkUploadLimit</dt>
  *     <dd>An integer count of messages, the maximum number of messages to queue before an upload attempt. This value should be less than 50.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.FlushInterval</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.FlushInterval</dt>
  *     <dd>An integer number of milliseconds, the maximum time to wait before an upload if the bulk upload limit isn't reached.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DebugFlushInterval</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DebugFlushInterval</dt>
  *     <dd>An integer number of milliseconds, the maximum time to wait before an upload if the bulk upload limit isn't reached in debug mode.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DataExpiration</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DataExpiration</dt>
  *     <dd>An integer number of milliseconds, the maximum age of records to send to Mixpanel. Corresponds to Mixpanel's server-side limit on record age.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.MinimumDatabaseLimit</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.MinimumDatabaseLimit</dt>
  *     <dd>An integer number of bytes. Mixpanel attempts to limit the size of its persistent data
  *          queue based on the storage capacity of the device, but will always allow queing below this limit. Higher values
  *          will take up more storage even when user storage is very full.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.ResourcePackageName</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.ResourcePackageName</dt>
  *     <dd>A string java package name. Defaults to the package name of the Application. Users should set if the package name of their R class is different from the application package name due to application id settings.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DisableGestureBindingUI</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DisableGestureBindingUI</dt>
  *     <dd>A boolean value. If true, do not allow connecting to the codeless event binding or A/B testing editor using an accelerometer gesture. Defaults to false.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DisableEmulatorBindingUI</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DisableEmulatorBindingUI</dt>
  *     <dd>A boolean value. If true, do not attempt to connect to the codeless event binding or A/B testing editor when running in the Android emulator. Defaults to false.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DisableAppOpenEvent</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DisableAppOpenEvent</dt>
  *     <dd>A boolean value. If true, do not send an "$app_open" event when the MixpanelAPI object is created for the first time. Defaults to true - the $app_open event will not be sent by default.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.AutoShowMixpanelUpdates</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.AutoShowMixpanelUpdates</dt>
  *     <dd>A boolean value. If true, automatically show notifications and A/B test variants. Defaults to true.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.EventsEndpoint</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.EventsEndpoint</dt>
  *     <dd>A string URL. If present, the library will attempt to send events to this endpoint rather than to the default Mixpanel endpoint.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.PeopleEndpoint</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.PeopleEndpoint</dt>
  *     <dd>A string URL. If present, the library will attempt to send people updates to this endpoint rather than to the default Mixpanel endpoint.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DecideEndpoint</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DecideEndpoint</dt>
  *     <dd>A string URL. If present, the library will attempt to get notification, codeless event tracking, and A/B test variant information from this url rather than the default Mixpanel endpoint.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.EditorUrl</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.EditorUrl</dt>
  *     <dd>A string URL. If present, the library will attempt to connect to this endpoint when in interactive editing mode, rather than to the default Mixpanel editor url.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.IgnoreInvisibleViewsVisualEditor</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.IgnoreInvisibleViewsVisualEditor</dt>
  *     <dd>A boolean value. If true, invisible views won't be shown on Mixpanel Visual Editor (AB Test and codeless events) . Defaults to false.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DisableViewCrawler</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DisableViewCrawler</dt>
  *     <dd>A boolean value. If true, AB tests, tweaks and codeless events will be disabled. Defaults to false.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DisableDecideChecker</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DisableDecideChecker</dt>
  *     <dd>A boolean value. If true, the library will not query our decide endpoint and won't retrieve in-app notifications, codeless events, Ab Tests or tweaks. Defaults to false.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.NotificationDefaults</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.NotificationDefaults</dt>
  *     <dd>An integer number. This value is used to create a notification before API 26 (https://developer.android.com/reference/android/app/Notification.Builder.html#setDefaults(int)). Defaults to 0.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.MinimumSessionDuration</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.MinimumSessionDuration</dt>
  *     <dd>An integer number. The minimum session duration (ms) that is tracked in automatic events. Defaults to 10000 (10 seconds).</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.SessionTimeoutDuration</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.SessionTimeoutDuration</dt>
  *     <dd>An integer number. The maximum session duration (ms) that is tracked in automatic events. Defaults to Integer.MAX_VALUE (no maximum session duration).</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.TestMode</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.TestMode</dt>
  *     <dd>A boolean value. If true, in-app notifications won't be marked as seen. Defaults to false.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.ImageCacheMaxMemoryFactor</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.ImageCacheMaxMemoryFactor</dt>
  *     <dd>An integer value. The LRU cache size that Mixpanel uses to store images is calculated by the available memory divided by this factor. Defaults to 10.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.DisableViewCrawlerForProjects</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.DisableViewCrawlerForProjects</dt>
  *     <dd>A resource array list (e.g. @array/my_project_list). AB tests, tweaks and codeless events will be disabled for the projects from that list. Defaults to null.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.UseIpAddressForGeolocation</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.UseIpAddressForGeolocation</dt>
  *     <dd>A boolean value. If true, Mixpanel will automatically determine city, region and country data using the IP address of the client.Defaults to true.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.NotificationChannelId</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.NotificationChannelId</dt>
  *     <dd>An string value. If present, the library will use this id when creating a notification channel. Applicable only for Android 26 and above.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.NotificationChannelName</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.NotificationChannelName</dt>
  *     <dd>An string value. If present, the library will use this user-visible name for our notification channel. Applicable only for Android 26 and above. Defaults to the application name.</dd>
  *
- *     <dt>com.mixpanel.android.MPConfig.NotificationChannelImportance</dt>
+ *     <dt>com.mixpanellite.android.MPLConfig.NotificationChannelImportance</dt>
  *     <dd>An integer number. Importance of the notification channel (see https://developer.android.com/reference/android/app/NotificationManager.html). Defaults to 3 (IMPORTANCE_DEFAULT). Applicable only for Android 26 and above.</dd>
  * </dl>
  *
@@ -201,42 +201,53 @@ public class MPLConfig {
             sslContext.init(null, null, null);
             foundSSLFactory = sslContext.getSocketFactory();
         } catch (final GeneralSecurityException e) {
-            MPLLog.i("MixpanelAPI.Conf", "System has no SSL support. Built-in events editor will " +
+            MPLLog.i("MixpanelLiteAPI.Conf", "System has no SSL support. Built-in events editor " +
+                    "will " +
                     "not be available", e);
             foundSSLFactory = null;
         }
         mSSLSocketFactory = foundSSLFactory;
 
-        DEBUG = metaData.getBoolean("com.mixpanel.android.MPConfig.EnableDebugLogging", false);
+        DEBUG = metaData.getBoolean("com.mixpanellite.android.MPLConfig.EnableDebugLogging", false);
         if (DEBUG) {
             MPLLog.setLevel(MPLLog.VERBOSE);
         }
 
-        if (metaData.containsKey("com.mixpanel.android.MPConfig.DebugFlushInterval")) {
-            MPLLog.w(LOGTAG, "We do not support com.mixpanel.android.MPConfig.DebugFlushInterval " +
+        if (metaData.containsKey("com.mixpanellite.android.MPLConfig.DebugFlushInterval")) {
+            MPLLog.w(LOGTAG, "We do not support com.mixpanellite.android.MPLConfig.DebugFlushInterval " +
                     "anymore. There will only be one flush interval. Please, update your AndroidManifest.xml.");
         }
 
-        mBulkUploadLimit = metaData.getInt("com.mixpanel.android.MPConfig.BulkUploadLimit", 40); // 40 records default
-        mFlushInterval = metaData.getInt("com.mixpanel.android.MPConfig.FlushInterval", 60 * 1000); // one minute default
-        mDataExpiration = metaData.getInt("com.mixpanel.android.MPConfig.DataExpiration", 1000 * 60 * 60 * 24 * 5); // 5 days default
-        mMinimumDatabaseLimit = metaData.getInt("com.mixpanel.android.MPConfig.MinimumDatabaseLimit", 20 * 1024 * 1024); // 20 Mb
-        mResourcePackageName = metaData.getString("com.mixpanel.android.MPConfig.ResourcePackageName"); // default is null
-        mDisableAppOpenEvent = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableAppOpenEvent", true);
-        mDisableDecideChecker = metaData.getBoolean("com.mixpanel.android.MPConfig.DisableDecideChecker", false);
-        mMinSessionDuration = metaData.getInt("com.mixpanel.android.MPConfig.MinimumSessionDuration", 10 * 1000); // 10 seconds
-        mSessionTimeoutDuration = metaData.getInt("com.mixpanel.android.MPConfig.SessionTimeoutDuration", Integer.MAX_VALUE); // no timeout by default
-        mUseIpAddressForGeolocation = metaData.getBoolean("com.mixpanel.android.MPConfig.UseIpAddressForGeolocation", true);
-        mTestMode = metaData.getBoolean("com.mixpanel.android.MPConfig.TestMode", false);
+        mBulkUploadLimit = metaData.getInt("com.mixpanellite.android.MPLConfig.BulkUploadLimit",
+                40); // 40 records default
+        mFlushInterval = metaData.getInt("com.mixpanellite.android.MPLConfig.FlushInterval", 60 *
+                1000); // one minute default
+        mDataExpiration = metaData.getInt("com.mixpanellite.android.MPLConfig.DataExpiration",
+                1000 * 60 * 60 * 24 * 5); // 5 days default
+        mMinimumDatabaseLimit = metaData.getInt("com.mixpanellite.android.MPLConfig" +
+                ".MinimumDatabaseLimit", 20 * 1024 * 1024); // 20 Mb
+        mResourcePackageName = metaData.getString("com.mixpanellite.android.MPLConfig" +
+                ".ResourcePackageName"); // default is null
+        mDisableAppOpenEvent = metaData.getBoolean("com.mixpanellite.android.MPLConfig" +
+                ".DisableAppOpenEvent", true);
+        mDisableDecideChecker = metaData.getBoolean("com.mixpanellite.android.MPLConfig" +
+                ".DisableDecideChecker", false);
+        mMinSessionDuration = metaData.getInt("com.mixpanellite.android.MPLConfig" +
+                ".MinimumSessionDuration", 10 * 1000); // 10 seconds
+        mSessionTimeoutDuration = metaData.getInt("com.mixpanellite.android.MPLConfig" +
+                ".SessionTimeoutDuration", Integer.MAX_VALUE); // no timeout by default
+        mUseIpAddressForGeolocation = metaData.getBoolean("com.mixpanellite.android.MPLConfig" +
+                ".UseIpAddressForGeolocation", true);
+        mTestMode = metaData.getBoolean("com.mixpanellite.android.MPLConfig.TestMode", false);
 
-        String eventsEndpoint = metaData.getString("com.mixpanel.android.MPConfig.EventsEndpoint");
+        String eventsEndpoint = metaData.getString("com.mixpanellite.android.MPLConfig.EventsEndpoint");
         if (null == eventsEndpoint) {
             eventsEndpoint = "https://api.mixpanel.com/track?ip=" + (mUseIpAddressForGeolocation ? "1" : "0");
         }
         mEventsEndpoint = eventsEndpoint;
 
         MPLLog.v(LOGTAG,
-                "Mixpanel (" + VERSION + ") configured with:\n" +
+                "MixpanelLite (" + VERSION + ") configured with:\n" +
                 "    BulkUploadLimit " + getBulkUploadLimit() + "\n" +
                 "    FlushInterval " + getFlushInterval() + "\n" +
                 "    DataExpiration " + getDataExpiration() + "\n" +
@@ -332,7 +343,7 @@ public class MPLConfig {
             }
             return new MPLConfig(configBundle, appContext);
         } catch (final NameNotFoundException e) {
-            throw new RuntimeException("Can't configure Mixpanel with package name " + packageName, e);
+            throw new RuntimeException("Can't configure MixpanelLite with package name " + packageName, e);
         }
     }
 

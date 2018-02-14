@@ -1,26 +1,18 @@
 package com.mixpanel.android.mpmetrics;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Application;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
 
 import com.mixpanel.android.util.MPLLog;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -229,11 +221,8 @@ public class MixpanelLiteAPI {
             MixpanelLiteAPI instance = instances.get(appContext);
             if (null == instance && ConfigurationChecker.checkBasicConfiguration(appContext)) {
                 instance = new MixpanelLiteAPI(appContext, sReferrerPrefs, token);
-                registerAppLinksListeners(context, instance);
                 instances.put(appContext, instance);
             }
-
-            checkIntentForInboundAppLink(context);
 
             return instance;
         }
@@ -288,11 +277,8 @@ public class MixpanelLiteAPI {
             MixpanelLiteAPI instance = instances.get(appContext);
             if (null == instance && ConfigurationChecker.checkBasicConfiguration(appContext)) {
                 instance = new MixpanelLiteAPI(appContext, sReferrerPrefs, token, config);
-                registerAppLinksListeners(context, instance);
                 instances.put(appContext, instance);
             }
-
-            checkIntentForInboundAppLink(context);
 
             return instance;
         }
@@ -307,7 +293,7 @@ public class MixpanelLiteAPI {
     public static void setFlushInterval(Context context, long milliseconds) {
         MPLLog.i(
             LOGTAG,
-            "MixpanelAPI.setFlushInterval is deprecated. Calling is now a no-op.\n" +
+                "MixpanelLiteAPI.setFlushInterval is deprecated. Calling is now a no-op.\n" +
             "    To set a custom Mixpanel flush interval for your application, add\n" +
             "    <meta-data android:name=\"com.mixpanel.android.MPConfig.FlushInterval\" android:value=\"YOUR_INTERVAL\" />\n" +
             "    to the <application> section of your AndroidManifest.xml."
@@ -665,7 +651,7 @@ public class MixpanelLiteAPI {
     public void logPosts() {
         MPLLog.i(
                 LOGTAG,
-                "MixpanelAPI.logPosts() is deprecated.\n" +
+                "MixpanelLiteAPI.logPosts() is deprecated.\n" +
                         "    To get verbose debug level logging, add\n" +
                         "    <meta-data android:name=\"com.mixpanel.android.MPConfig.EnableDebugLogging\" value=\"true\" />\n" +
                         "    to the <application> section of your AndroidManifest.xml."
@@ -750,20 +736,18 @@ public class MixpanelLiteAPI {
         final SharedPreferencesLoader.OnPrefsLoadedListener listener = new SharedPreferencesLoader.OnPrefsLoadedListener() {
             @Override
             public void onPrefsLoaded(SharedPreferences preferences) {
-                final JSONArray records = PersistentIdentity.waitingPeopleRecordsForSending(preferences);
-                if (null != records) {
-                    sendAllPeopleRecords(records);
-                }
+
             }
         };
 
-        final String prefsName = "com.mixpanel.android.mpmetrics.MixpanelAPI_" + token;
+        final String prefsName = "com.mixpanellite.android.mpmetrics.MixpanelLiteAPI_" + token;
         final Future<SharedPreferences> storedPreferences = sPrefsLoader.loadPreferences(context, prefsName, listener);
 
-        final String timeEventsPrefsName = "com.mixpanel.android.mpmetrics.MixpanelAPI.TimeEvents_" + token;
+        final String timeEventsPrefsName = "com.mixpanellite.android.mpmetrics.MixpanelLiteAPI" +
+                ".TimeEvents_" + token;
         final Future<SharedPreferences> timeEventsPrefs = sPrefsLoader.loadPreferences(context, timeEventsPrefsName, null);
 
-        final String mixpanelPrefsName = "com.mixpanel.android.mpmetrics.Mixpanel";
+        final String mixpanelPrefsName = "com.mixpanellite.android.mpmetrics.MixpanelLite";
         final Future<SharedPreferences> mixpanelPrefs = sPrefsLoader.loadPreferences(context, mixpanelPrefsName, null);
 
         return new PersistentIdentity(referrerPreferences, storedPreferences, timeEventsPrefs, mixpanelPrefs);
@@ -772,8 +756,6 @@ public class MixpanelLiteAPI {
     /* package */ boolean sendAppOpen() {
         return !mConfig.getDisableAppOpenEvent();
     }
-
-    ////////////////////////////////////////////////////
 
     protected void track(String eventName, JSONObject properties, boolean isAutomaticEvent) {
         final Long eventBegin;
@@ -824,93 +806,6 @@ public class MixpanelLiteAPI {
 
         } catch (final JSONException e) {
             MPLLog.e(LOGTAG, "Exception tracking event " + eventName, e);
-        }
-    }
-
-    private void recordPeopleMessage(JSONObject message) {
-        if (message.has("$distinct_id")) {
-           mMessages.peopleMessage(new AnalyticsMessages.PeopleDescription(message, mToken));
-        } else {
-           mPersistentIdentity.storeWaitingPeopleRecord(message);
-        }
-    }
-
-    private void pushWaitingPeopleRecord() {
-        final JSONArray records = mPersistentIdentity.waitingPeopleRecordsForSending();
-        if (null != records) {
-            sendAllPeopleRecords(records);
-        }
-    }
-
-    // MUST BE THREAD SAFE. Called from crazy places. mPersistentIdentity may not exist
-    // when this is called (from its crazy thread)
-    private void sendAllPeopleRecords(JSONArray records) {
-        for (int i = 0; i < records.length(); i++) {
-            try {
-                final JSONObject message = records.getJSONObject(i);
-                mMessages.peopleMessage(new AnalyticsMessages.PeopleDescription(message, mToken));
-            } catch (final JSONException e) {
-                MPLLog.e(LOGTAG, "Malformed people record stored pending identity, will not send it.", e);
-            }
-        }
-    }
-
-    private static void registerAppLinksListeners(Context context, final MixpanelLiteAPI mixpanel) {
-        // Register a BroadcastReceiver to receive com.parse.bolts.measurement_event and track a call to mixpanel
-        try {
-            final Class<?> clazz = Class.forName("android.support.v4.content.LocalBroadcastManager");
-            final Method methodGetInstance = clazz.getMethod("getInstance", Context.class);
-            final Method methodRegisterReceiver = clazz.getMethod("registerReceiver", BroadcastReceiver.class, IntentFilter.class);
-            final Object localBroadcastManager = methodGetInstance.invoke(null, context);
-            methodRegisterReceiver.invoke(localBroadcastManager, new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    final JSONObject properties = new JSONObject();
-                    final Bundle args = intent.getBundleExtra("event_args");
-                    if (args != null) {
-                        for (final String key : args.keySet()) {
-                            try {
-                                properties.put(key, args.get(key));
-                            } catch (final JSONException e) {
-                                MPLLog.e(APP_LINKS_LOGTAG, "failed to add key \"" + key + "\" to properties for tracking bolts event", e);
-                            }
-                        }
-                    }
-                    mixpanel.track("$" + intent.getStringExtra("event_name"), properties);
-                }
-            }, new IntentFilter("com.parse.bolts.measurement_event"));
-        } catch (final InvocationTargetException e) {
-            MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke LocalBroadcastManager.registerReceiver() -- App Links tracking will not be enabled due to this exception", e);
-        } catch (final ClassNotFoundException e) {
-            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be installed: " + e.getMessage());
-        } catch (final NoSuchMethodException e) {
-            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be installed: " + e.getMessage());
-        } catch (final IllegalAccessException e) {
-            MPLLog.d(APP_LINKS_LOGTAG, "App Links tracking will not be enabled due to this exception: " + e.getMessage());
-        }
-    }
-
-    private static void checkIntentForInboundAppLink(Context context) {
-        // call the Bolts getTargetUrlFromInboundIntent method simply for a side effect
-        // if the intent is the result of an App Link, it'll trigger al_nav_in
-        // https://github.com/BoltsFramework/Bolts-Android/blob/1.1.2/Bolts/src/bolts/AppLinks.java#L86
-        if (context instanceof Activity) {
-            try {
-                final Class<?> clazz = Class.forName("bolts.AppLinks");
-                final Intent intent = ((Activity) context).getIntent();
-                final Method getTargetUrlFromInboundIntent = clazz.getMethod("getTargetUrlFromInboundIntent", Context.class, Intent.class);
-                getTargetUrlFromInboundIntent.invoke(null, context, intent);
-            } catch (final InvocationTargetException e) {
-                MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke bolts.AppLinks.getTargetUrlFromInboundIntent() -- Unable to detect inbound App Links", e);
-            } catch (final ClassNotFoundException e) {
-                MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
-            } catch (final NoSuchMethodException e) {
-                MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
-            } catch (final IllegalAccessException e) {
-                MPLLog.d(APP_LINKS_LOGTAG, "Unable to detect inbound App Links: " + e.getMessage());
-            }
-        } else {
-            MPLLog.d(APP_LINKS_LOGTAG, "Context is not an instance of Activity. To detect inbound App Links, pass an instance of an Activity to getInstance.");
         }
     }
 

@@ -323,7 +323,8 @@ import javax.net.ssl.SSLSocketFactory;
                         mHandler = null;
                         try {
                             Looper.myLooper().quit();
-                            MPLLog.e(LOGTAG, "Mixpanel will not process any more analytics messages", e);
+                            MPLLog.e(LOGTAG, "MixpanelLite will not process any more analytics " +
+                                    "messages", e);
                         } catch (final Exception tooLate) {
                             MPLLog.e(LOGTAG, "Could not halt looper", tooLate);
                         }
