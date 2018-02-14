@@ -15,7 +15,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.mixpanel.android.util.Base64Coder;
 import com.mixpanel.android.util.HttpService;
-import com.mixpanel.android.util.MPLog;
+import com.mixpanel.android.util.MPLLog;
 import com.mixpanel.android.util.RemoteService;
 
 import org.json.JSONException;
@@ -113,12 +113,12 @@ import javax.net.ssl.SSLSocketFactory;
         return mWorker.isDead();
     }
 
-    protected MPDbAdapter makeDbAdapter(Context context) {
-        return MPDbAdapter.getInstance(context);
+    protected MPLDbAdapter makeDbAdapter(Context context) {
+        return MPLDbAdapter.getInstance(context);
     }
 
-    protected MPConfig getConfig(Context context) {
-        return MPConfig.getInstance(context);
+    protected MPLConfig getConfig(Context context) {
+        return MPLConfig.getInstance(context);
     }
 
     protected RemoteService getPoster() {
@@ -203,11 +203,11 @@ import javax.net.ssl.SSLSocketFactory;
     // Sends a message if and only if we are running with Mixpanel Message log enabled.
     // Will be called from the Mixpanel thread.
     private void logAboutMessageToMixpanel(String message) {
-        MPLog.v(LOGTAG, message + " (Thread " + Thread.currentThread().getId() + ")");
+        MPLLog.v(LOGTAG, message + " (Thread " + Thread.currentThread().getId() + ")");
     }
 
     private void logAboutMessageToMixpanel(String message, Throwable e) {
-        MPLog.v(LOGTAG, message + " (Thread " + Thread.currentThread().getId() + ")", e);
+        MPLLog.v(LOGTAG, message + " (Thread " + Thread.currentThread().getId() + ")", e);
     }
 
     // Worker will manage the (at most single) IO thread associated with
@@ -256,11 +256,12 @@ import javax.net.ssl.SSLSocketFactory;
             public void handleMessage(Message msg) {
                 if (mDbAdapter == null) {
                     mDbAdapter = makeDbAdapter(mContext);
-                    mDbAdapter.cleanupEvents(System.currentTimeMillis() - mConfig.getDataExpiration(), MPDbAdapter.Table.EVENTS);
+                    mDbAdapter.cleanupEvents(System.currentTimeMillis() - mConfig
+                            .getDataExpiration(), MPLDbAdapter.Table.EVENTS);
                 }
 
                 try {
-                    int returnCode = MPDbAdapter.DB_UNDEFINED_CODE;
+                    int returnCode = MPLDbAdapter.DB_UNDEFINED_CODE;
                     String token = null;
 
                     if (msg.what == ENQUEUE_EVENTS) {
@@ -270,9 +271,10 @@ import javax.net.ssl.SSLSocketFactory;
                             logAboutMessageToMixpanel("Queuing event for sending later");
                             logAboutMessageToMixpanel("    " + message.toString());
                             token = eventDescription.getToken();
-                            returnCode = mDbAdapter.addJSON(message, token, MPDbAdapter.Table.EVENTS, eventDescription.isAutomatic());
+                            returnCode = mDbAdapter.addJSON(message, token, MPLDbAdapter.Table
+                                    .EVENTS, eventDescription.isAutomatic());
                         } catch (final JSONException e) {
-                            MPLog.e(LOGTAG, "Exception tracking event " + eventDescription.getEventName(), e);
+                            MPLLog.e(LOGTAG, "Exception tracking event " + eventDescription.getEventName(), e);
                         }
                     } else if (msg.what == FLUSH_QUEUE) {
                         logAboutMessageToMixpanel("Flushing queue due to scheduled or forced flush");
@@ -284,18 +286,18 @@ import javax.net.ssl.SSLSocketFactory;
                         final String senderId = (String) msg.obj;
                         runGCMRegistration(senderId);
                     } else if (msg.what == KILL_WORKER) {
-                        MPLog.w(LOGTAG, "Worker received a hard kill. Dumping all events and force-killing. Thread id " + Thread.currentThread().getId());
+                        MPLLog.w(LOGTAG, "Worker received a hard kill. Dumping all events and force-killing. Thread id " + Thread.currentThread().getId());
                         synchronized(mHandlerLock) {
                             mDbAdapter.deleteDB();
                             mHandler = null;
                             Looper.myLooper().quit();
                         }
                     } else {
-                        MPLog.e(LOGTAG, "Unexpected message received by Mixpanel worker: " + msg);
+                        MPLLog.e(LOGTAG, "Unexpected message received by Mixpanel worker: " + msg);
                     }
 
                     ///////////////////////////
-                    if ((returnCode >= mConfig.getBulkUploadLimit() || returnCode == MPDbAdapter.DB_OUT_OF_MEMORY_ERROR) && mFailedRetries <= 0 && token != null) {
+                    if ((returnCode >= mConfig.getBulkUploadLimit() || returnCode == MPLDbAdapter.DB_OUT_OF_MEMORY_ERROR) && mFailedRetries <= 0 && token != null) {
                         logAboutMessageToMixpanel("Flushing queue due to bulk upload limit (" + returnCode + ") for project " + token);
                         updateFlushFrequency();
                         sendAllData(mDbAdapter, token);
@@ -316,14 +318,14 @@ import javax.net.ssl.SSLSocketFactory;
                         }
                     }
                 } catch (final RuntimeException e) {
-                    MPLog.e(LOGTAG, "Worker threw an unhandled exception", e);
+                    MPLLog.e(LOGTAG, "Worker threw an unhandled exception", e);
                     synchronized (mHandlerLock) {
                         mHandler = null;
                         try {
                             Looper.myLooper().quit();
-                            MPLog.e(LOGTAG, "Mixpanel will not process any more analytics messages", e);
+                            MPLLog.e(LOGTAG, "Mixpanel will not process any more analytics messages", e);
                         } catch (final Exception tooLate) {
-                            MPLog.e(LOGTAG, "Could not halt looper", tooLate);
+                            MPLLog.e(LOGTAG, "Could not halt looper", tooLate);
                         }
                     }
                 }
@@ -347,43 +349,43 @@ import javax.net.ssl.SSLSocketFactory;
                     try {
                         final int resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(mContext);
                         if (resultCode != ConnectionResult.SUCCESS) {
-                            MPLog.i(LOGTAG, "Can't register for push notifications, Google Play Services are not installed.");
+                            MPLLog.i(LOGTAG, "Can't register for push notifications, Google Play Services are not installed.");
                             return;
                         }
                     } catch (RuntimeException e) {
-                        MPLog.i(LOGTAG, "Can't register for push notifications, Google Play services are not configured.");
+                        MPLLog.i(LOGTAG, "Can't register for push notifications, Google Play services are not configured.");
                         return;
                     }
 
                     InstanceID instanceID = InstanceID.getInstance(mContext);
                     registrationId = instanceID.getToken(senderID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
                 } catch (IOException e) {
-                    MPLog.i(LOGTAG, "Exception when trying to register for GCM", e);
+                    MPLLog.i(LOGTAG, "Exception when trying to register for GCM", e);
                     return;
                 } catch (NoClassDefFoundError e) {
-                    MPLog.w(LOGTAG, "Google play services were not part of this build, push notifications cannot be registered or delivered");
+                    MPLLog.w(LOGTAG, "Google play services were not part of this build, push notifications cannot be registered or delivered");
                     return;
                 }
 
-                MixpanelAPI.allInstances(new MixpanelAPI.InstanceProcessor() {
+                MixpanelLiteAPI.allInstances(new MixpanelLiteAPI.InstanceProcessor() {
                     @Override
-                    public void process(MixpanelAPI api) {
-                        MPLog.v(LOGTAG, "Using existing pushId " + registrationId);
+                    public void process(MixpanelLiteAPI api) {
+                        MPLLog.v(LOGTAG, "Using existing pushId " + registrationId);
                     }
                 });
             }
 
-            private void sendAllData(MPDbAdapter dbAdapter, String token) {
+            private void sendAllData(MPLDbAdapter dbAdapter, String token) {
                 final RemoteService poster = getPoster();
                 if (!poster.isOnline(mContext, mConfig.getOfflineMode())) {
                     logAboutMessageToMixpanel("Not flushing data to Mixpanel because the device is not connected to the internet.");
                     return;
                 }
 
-                sendData(dbAdapter, token, MPDbAdapter.Table.EVENTS, mConfig.getEventsEndpoint());
+                sendData(dbAdapter, token, MPLDbAdapter.Table.EVENTS, mConfig.getEventsEndpoint());
             }
 
-            private void sendData(MPDbAdapter dbAdapter, String token, MPDbAdapter.Table table, String url) {
+            private void sendData(MPLDbAdapter dbAdapter, String token, MPLDbAdapter.Table table, String url) {
                 final RemoteService poster = getPoster();
                 boolean includeAutomaticEvents = true;
                 String[] eventsData = dbAdapter.generateDataString(table, token, includeAutomaticEvents);
@@ -399,7 +401,7 @@ import javax.net.ssl.SSLSocketFactory;
                     final String encodedData = Base64Coder.encodeString(rawMessage);
                     final Map<String, Object> params = new HashMap<String, Object>();
                     params.put("data", encodedData);
-                    if (MPConfig.DEBUG) {
+                    if (MPLConfig.DEBUG) {
                         params.put("verbose", "1");
                     }
 
@@ -428,9 +430,9 @@ import javax.net.ssl.SSLSocketFactory;
                             logAboutMessageToMixpanel("Response was " + parsedResponse);
                         }
                     } catch (final OutOfMemoryError e) {
-                        MPLog.e(LOGTAG, "Out of memory when posting to " + url + ".", e);
+                        MPLLog.e(LOGTAG, "Out of memory when posting to " + url + ".", e);
                     } catch (final MalformedURLException e) {
-                        MPLog.e(LOGTAG, "Cannot interpret " + url + " as a URL.", e);
+                        MPLLog.e(LOGTAG, "Cannot interpret " + url + " as a URL.", e);
                     } catch (final RemoteService.ServiceUnavailableException e) {
                         logAboutMessageToMixpanel("Cannot post message to " + url + ".", e);
                         deleteEvents = false;
@@ -471,7 +473,7 @@ import javax.net.ssl.SSLSocketFactory;
                 final JSONObject ret = new JSONObject();
 
                 ret.put("mp_lib", "android");
-                ret.put("$lib_version", MPConfig.VERSION);
+                ret.put("$lib_version", MPLConfig.VERSION);
 
                 // For querying together with data from other libraries
                 ret.put("$os", "Android");
@@ -571,7 +573,7 @@ import javax.net.ssl.SSLSocketFactory;
                 return eventObj;
             }
 
-            private MPDbAdapter mDbAdapter;
+            private MPLDbAdapter mDbAdapter;
             private final long mFlushInterval;
             private long mTrackEngageRetryAfter;
             private int mFailedRetries;
@@ -610,7 +612,7 @@ import javax.net.ssl.SSLSocketFactory;
     // Used across thread boundaries
     private final Worker mWorker;
     protected final Context mContext;
-    protected final MPConfig mConfig;
+    protected final MPLConfig mConfig;
 
     // Messages for our thread
     private static final int ENQUEUE_PEOPLE = 0; // submit events and people data

@@ -31,7 +31,7 @@ public class HttpTest extends AndroidTestCase {
     private List<Object> mFlushResults, mDecideResults;
     private BlockingQueue<String> mPerformRequestCalls, mDecideCalls;
     private List<String> mCleanupCalls;
-    private MixpanelAPI mMetrics;
+    private MixpanelLiteAPI mMetrics;
     private volatile int mFlushInterval;
     private volatile boolean mForceOverMemThreshold;
     private static final long POLL_WAIT_MAX_MILLISECONDS = 3500;
@@ -101,7 +101,7 @@ public class HttpTest extends AndroidTestCase {
             }
         };
 
-        final MPConfig config = new MPConfig(new Bundle(), getContext()) {
+        final MPLConfig config = new MPLConfig(new Bundle(), getContext()) {
             @Override
             public String getEventsEndpoint() {
                 return "EVENTS ENDPOINT";
@@ -113,7 +113,7 @@ public class HttpTest extends AndroidTestCase {
             }
         };
 
-        final MPDbAdapter mockAdapter = new MPDbAdapter(getContext()) {
+        final MPLDbAdapter mockAdapter = new MPLDbAdapter(getContext()) {
             @Override
             public void cleanupEvents(String last_id, Table table, String token, boolean includeAutomaticEvents) {
                 mCleanupCalls.add("called");
@@ -132,7 +132,7 @@ public class HttpTest extends AndroidTestCase {
 
         final AnalyticsMessages listener = new AnalyticsMessages(getContext()) {
             @Override
-            protected MPDbAdapter makeDbAdapter(Context context) {
+            protected MPLDbAdapter makeDbAdapter(Context context) {
                 return mockAdapter;
             }
 
@@ -142,12 +142,13 @@ public class HttpTest extends AndroidTestCase {
             }
 
             @Override
-            protected MPConfig getConfig(Context context) {
+            protected MPLConfig getConfig(Context context) {
                 return config;
             }
         };
 
-        mMetrics = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, "Test Message Queuing") {
+        mMetrics = new TestUtils.CleanMixpanelLiteAPI(getContext(), mMockPreferences, "Test " +
+                "Message Queuing") {
             @Override
             protected AnalyticsMessages getAnalyticsMessages() {
                 return listener;

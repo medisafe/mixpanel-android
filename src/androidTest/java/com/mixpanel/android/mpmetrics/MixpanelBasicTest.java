@@ -46,7 +46,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             final StringBuilder queryBuilder = new StringBuilder();
             queryBuilder.append("&properties=");
             JSONObject properties = new JSONObject();
-            properties.putOpt("$android_lib_version", MPConfig.VERSION);
+            properties.putOpt("$android_lib_version", MPLConfig.VERSION);
             properties.putOpt("$android_app_version", systemInformation.getAppVersionName());
             properties.putOpt("$android_version", Build.VERSION.RELEASE);
             properties.putOpt("$android_app_release", systemInformation.getAppVersionCode());
@@ -57,12 +57,13 @@ public class MixpanelBasicTest extends AndroidTestCase {
     } // end of setUp() method definition
 
     public void testVersionsMatch() {
-        assertEquals(BuildConfig.MIXPANEL_VERSION, MPConfig.VERSION);
+        assertEquals(BuildConfig.MIXPANEL_VERSION, MPLConfig.VERSION);
     }
 
     public void testGeneratedDistinctId() {
         String fakeToken = UUID.randomUUID().toString();
-        MixpanelAPI mixpanel = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, fakeToken);
+        MixpanelLiteAPI mixpanel = new TestUtils.CleanMixpanelLiteAPI(getContext(),
+                mMockPreferences, fakeToken);
         String generatedId1 = mixpanel.getDistinctId();
         assertTrue(generatedId1 != null);
 
@@ -81,17 +82,17 @@ public class MixpanelBasicTest extends AndroidTestCase {
         afterMap.put("added", "after");
         JSONObject after = new JSONObject(afterMap);
 
-        MPDbAdapter adapter = new MPDbAdapter(getContext(), "DeleteTestDB");
-        adapter.addJSON(before, "ATOKEN", MPDbAdapter.Table.EVENTS, false);
+        MPLDbAdapter adapter = new MPLDbAdapter(getContext(), "DeleteTestDB");
+        adapter.addJSON(before, "ATOKEN", MPLDbAdapter.Table.EVENTS, false);
         adapter.deleteDB();
 
-        String[] emptyEventsData = adapter.generateDataString(MPDbAdapter.Table.EVENTS, "ATOKEN", true);
+        String[] emptyEventsData = adapter.generateDataString(MPLDbAdapter.Table.EVENTS, "ATOKEN", true);
         assertEquals(emptyEventsData, null);
 
-        adapter.addJSON(after, "ATOKEN", MPDbAdapter.Table.EVENTS, false);
+        adapter.addJSON(after, "ATOKEN", MPLDbAdapter.Table.EVENTS, false);
 
         try {
-            String[] someEventsData = adapter.generateDataString(MPDbAdapter.Table.EVENTS, "ATOKEN", true);
+            String[] someEventsData = adapter.generateDataString(MPLDbAdapter.Table.EVENTS, "ATOKEN", true);
             JSONArray someEvents = new JSONArray(someEventsData[1]);
             assertEquals(someEvents.length(), 1);
             assertEquals(someEvents.getJSONObject(0).get("added"), "after");
@@ -105,9 +106,9 @@ public class MixpanelBasicTest extends AndroidTestCase {
 
         final BlockingQueue<JSONObject> messages = new LinkedBlockingQueue<JSONObject>();
 
-        final MPDbAdapter explodingDb = new MPDbAdapter(getContext()) {
+        final MPLDbAdapter explodingDb = new MPLDbAdapter(getContext()) {
             @Override
-            public int addJSON(JSONObject message, String token, MPDbAdapter.Table table, boolean isAutomatic) {
+            public int addJSON(JSONObject message, String token, MPLDbAdapter.Table table, boolean isAutomatic) {
                 if (!isAutomatic) {
                     messages.add(message);
                     throw new RuntimeException("BANG!");
@@ -120,11 +121,12 @@ public class MixpanelBasicTest extends AndroidTestCase {
         final AnalyticsMessages explodingMessages = new AnalyticsMessages(getContext()) {
             // This will throw inside of our worker thread.
             @Override
-            public MPDbAdapter makeDbAdapter(Context context) {
+            public MPLDbAdapter makeDbAdapter(Context context) {
                 return explodingDb;
             }
         };
-        MixpanelAPI mixpanel = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, "TEST TOKEN testLooperDisaster") {
+        MixpanelLiteAPI mixpanel = new TestUtils.CleanMixpanelLiteAPI(getContext(),
+                mMockPreferences, "TEST TOKEN testLooperDisaster") {
             @Override
             protected AnalyticsMessages getAnalyticsMessages() {
                 return explodingMessages;
@@ -153,9 +155,9 @@ public class MixpanelBasicTest extends AndroidTestCase {
     public void testEventOperations() throws JSONException {
         final BlockingQueue<JSONObject> messages = new LinkedBlockingQueue<JSONObject>();
 
-        final MPDbAdapter eventOperationsAdapter = new MPDbAdapter(getContext()) {
+        final MPLDbAdapter eventOperationsAdapter = new MPLDbAdapter(getContext()) {
             @Override
-            public int addJSON(JSONObject message, String token, MPDbAdapter.Table table, boolean isAutomatic) {
+            public int addJSON(JSONObject message, String token, MPLDbAdapter.Table table, boolean isAutomatic) {
                 if (!isAutomatic) {
                     messages.add(message);
                 }
@@ -167,12 +169,12 @@ public class MixpanelBasicTest extends AndroidTestCase {
         final AnalyticsMessages eventOperationsMessages = new AnalyticsMessages(getContext()) {
             // This will throw inside of our worker thread.
             @Override
-            public MPDbAdapter makeDbAdapter(Context context) {
+            public MPLDbAdapter makeDbAdapter(Context context) {
                 return eventOperationsAdapter;
             }
         };
 
-        MixpanelAPI mixpanel = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, "Test event operations") {
+        MixpanelLiteAPI mixpanel = new TestUtils.CleanMixpanelLiteAPI(getContext(), mMockPreferences, "Test event operations") {
             @Override
             protected AnalyticsMessages getAnalyticsMessages() {
                 return eventOperationsMessages;
@@ -261,9 +263,9 @@ public class MixpanelBasicTest extends AndroidTestCase {
         final SynchronizedReference<Boolean> isIdentifiedRef = new SynchronizedReference<Boolean>();
         isIdentifiedRef.set(false);
 
-        final MPDbAdapter mockAdapter = new MPDbAdapter(getContext()) {
+        final MPLDbAdapter mockAdapter = new MPLDbAdapter(getContext()) {
             @Override
-            public int addJSON(JSONObject message, String token, MPDbAdapter.Table table, boolean isAutomaticEvent) {
+            public int addJSON(JSONObject message, String token, MPLDbAdapter.Table table, boolean isAutomaticEvent) {
                 if (!isAutomaticEvent) {
                     try {
                         messages.put("TABLE " + table.getName());
@@ -276,7 +278,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
                 return super.addJSON(message, token, table, isAutomaticEvent);
             }
         };
-        mockAdapter.cleanupEvents(Long.MAX_VALUE, MPDbAdapter.Table.EVENTS);
+        mockAdapter.cleanupEvents(Long.MAX_VALUE, MPLDbAdapter.Table.EVENTS);
 
         final RemoteService mockPoster = new HttpService() {
             @Override
@@ -306,7 +308,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
         };
 
 
-        final MPConfig mockConfig = new MPConfig(new Bundle(), getContext()) {
+        final MPLConfig mockConfig = new MPLConfig(new Bundle(), getContext()) {
             @Override
             public int getFlushInterval() {
                 return -1;
@@ -328,12 +330,12 @@ public class MixpanelBasicTest extends AndroidTestCase {
 
         final AnalyticsMessages listener = new AnalyticsMessages(getContext()) {
             @Override
-            protected MPDbAdapter makeDbAdapter(Context context) {
+            protected MPLDbAdapter makeDbAdapter(Context context) {
                 return mockAdapter;
             }
 
             @Override
-            protected MPConfig getConfig(Context context) {
+            protected MPLConfig getConfig(Context context) {
                 return mockConfig;
             }
 
@@ -343,7 +345,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             }
         };
 
-        MixpanelAPI metrics = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, "Test Message Queuing") {
+        MixpanelLiteAPI metrics = new TestUtils.CleanMixpanelLiteAPI(getContext(), mMockPreferences, "Test Message Queuing") {
             @Override
             protected AnalyticsMessages getAnalyticsMessages() {
                  return listener;
@@ -363,7 +365,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
         try {
             for (int i=0; i < mockConfig.getBulkUploadLimit() - 1; i++) {
                 String messageTable = messages.poll(POLL_WAIT_SECONDS, TimeUnit.SECONDS);
-                assertEquals("TABLE " + MPDbAdapter.Table.EVENTS.getName(), messageTable);
+                assertEquals("TABLE " + MPLDbAdapter.Table.EVENTS.getName(), messageTable);
 
                 expectedJSONMessage = messages.poll(POLL_WAIT_SECONDS, TimeUnit.SECONDS);
                 JSONObject message = new JSONObject(expectedJSONMessage);
@@ -371,7 +373,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             }
 
             String messageTable = messages.poll(POLL_WAIT_SECONDS, TimeUnit.SECONDS);
-            assertEquals("TABLE " + MPDbAdapter.Table.EVENTS.getName(), messageTable);
+            assertEquals("TABLE " + MPLDbAdapter.Table.EVENTS.getName(), messageTable);
 
             expectedJSONMessage = messages.poll(POLL_WAIT_SECONDS, TimeUnit.SECONDS);
             JSONObject message = new JSONObject(expectedJSONMessage);
@@ -388,7 +390,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             metrics.flush();
 
             String nextWaveTable = messages.poll(POLL_WAIT_SECONDS, TimeUnit.SECONDS);
-            assertEquals("TABLE " + MPDbAdapter.Table.EVENTS.getName(), nextWaveTable);
+            assertEquals("TABLE " + MPLDbAdapter.Table.EVENTS.getName(), nextWaveTable);
 
             expectedJSONMessage = messages.poll(POLL_WAIT_SECONDS, TimeUnit.SECONDS);
             JSONObject nextWaveMessage = new JSONObject(expectedJSONMessage);
@@ -427,7 +429,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
     }
 
     public void testPersistence() {
-        MixpanelAPI metricsOne = new MixpanelAPI(getContext(), mMockPreferences, "SAME TOKEN");
+        MixpanelLiteAPI metricsOne = new MixpanelLiteAPI(getContext(), mMockPreferences, "SAME TOKEN");
         metricsOne.reset();
 
         JSONObject props;
@@ -459,8 +461,8 @@ public class MixpanelBasicTest extends AndroidTestCase {
             }
         };
 
-        class ListeningAPI extends MixpanelAPI {
-            public ListeningAPI(Context c, Future<SharedPreferences> prefs, String token) {
+        class ListeningLiteAPI extends MixpanelLiteAPI {
+            public ListeningLiteAPI(Context c, Future<SharedPreferences> prefs, String token) {
                 super(c, prefs, token);
             }
 
@@ -484,7 +486,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             }
         }
 
-        MixpanelAPI differentToken = new ListeningAPI(getContext(), mMockPreferences, "DIFFERENT TOKEN");
+        MixpanelLiteAPI differentToken = new ListeningLiteAPI(getContext(), mMockPreferences, "DIFFERENT TOKEN");
 
         differentToken.track("other event", null);
 
@@ -507,7 +509,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
 
         messages.clear();
 
-        MixpanelAPI metricsTwo = new ListeningAPI(getContext(), mMockPreferences, "SAME TOKEN");
+        MixpanelLiteAPI metricsTwo = new ListeningLiteAPI(getContext(), mMockPreferences, "SAME TOKEN");
 
         metricsTwo.track("eventname", null);
 
@@ -548,9 +550,9 @@ public class MixpanelBasicTest extends AndroidTestCase {
             @Override
             public void run() {
 
-                final MPDbAdapter dbMock = new MPDbAdapter(getContext()) {
+                final MPLDbAdapter dbMock = new MPLDbAdapter(getContext()) {
                     @Override
-                    public int addJSON(JSONObject message, String token, MPDbAdapter.Table table, boolean isAutomatic) {
+                    public int addJSON(JSONObject message, String token, MPLDbAdapter.Table table, boolean isAutomatic) {
                         if (!isAutomatic) {
                             mMessages.add(message);
                         }
@@ -561,12 +563,12 @@ public class MixpanelBasicTest extends AndroidTestCase {
 
                 final AnalyticsMessages analyticsMessages = new AnalyticsMessages(getContext()) {
                     @Override
-                    public MPDbAdapter makeDbAdapter(Context context) {
+                    public MPLDbAdapter makeDbAdapter(Context context) {
                         return dbMock;
                     }
                 };
 
-                MixpanelAPI mixpanel = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, "TEST TOKEN") {
+                MixpanelLiteAPI mixpanel = new TestUtils.CleanMixpanelLiteAPI(getContext(), mMockPreferences, "TEST TOKEN") {
                     @Override
                     protected AnalyticsMessages getAnalyticsMessages() {
                         return analyticsMessages;
@@ -624,7 +626,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             }
         };
 
-        final MPConfig testConfig = MPConfig.readConfig(context);
+        final MPLConfig testConfig = MPLConfig.readConfig(context);
         assertEquals(1, testConfig.getBulkUploadLimit());
         assertEquals(2, testConfig.getFlushInterval());
         assertEquals(3, testConfig.getDataExpiration());
@@ -660,7 +662,7 @@ public class MixpanelBasicTest extends AndroidTestCase {
             }
         };
 
-        MixpanelAPI metrics = new TestUtils.CleanMixpanelAPI(getContext(), mMockPreferences, "Test Message Queuing") {
+        MixpanelLiteAPI metrics = new TestUtils.CleanMixpanelLiteAPI(getContext(), mMockPreferences, "Test Message Queuing") {
             @Override
             protected AnalyticsMessages getAnalyticsMessages() {
                  return listener;

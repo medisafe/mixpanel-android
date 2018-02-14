@@ -17,7 +17,8 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-/* package */ class MixpanelActivityLifecycleCallbacks implements Application.ActivityLifecycleCallbacks {
+/* package */ class MPLActivityLifecycleCallbacks implements Application
+        .ActivityLifecycleCallbacks {
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable check;
     private boolean mIsForeground = true;
@@ -25,7 +26,7 @@ import java.util.Locale;
     private static Double sStartSessionTime;
     public static final int CHECK_DELAY = 500;
 
-    public MixpanelActivityLifecycleCallbacks(MixpanelAPI mpInstance, MPConfig config) {
+    public MPLActivityLifecycleCallbacks(MixpanelLiteAPI mpInstance, MPLConfig config) {
         mMpInstance = mpInstance;
         mConfig = config;
         if (sStartSessionTime == null) {
@@ -135,6 +136,6 @@ import java.util.Locale;
         }
     }
 
-    private final MixpanelAPI mMpInstance;
-    private final MPConfig mConfig;
+    private final MixpanelLiteAPI mMpInstance;
+    private final MPLConfig mConfig;
 }

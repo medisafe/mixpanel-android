@@ -13,7 +13,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
-import com.mixpanel.android.util.MPLog;
+import com.mixpanel.android.util.MPLLog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -88,31 +88,32 @@ import java.util.concurrent.Future;
  * @see <a href="https://mixpanel.com/docs/people-analytics/android-push">getting started with push notifications for Android</a>
  * @see <a href="https://github.com/mixpanel/sample-android-mixpanel-integration">The Mixpanel Android sample application</a>
  */
-public class MixpanelAPI {
+public class MixpanelLiteAPI {
     /**
      * String version of the library.
      */
-    public static final String VERSION = MPConfig.VERSION;
+    public static final String VERSION = MPLConfig.VERSION;
 
     /**
      * You shouldn't instantiate MixpanelAPI objects directly.
      * Use MixpanelAPI.getInstance to get an instance.
      */
-    MixpanelAPI(Context context, Future<SharedPreferences> referrerPreferences, String token) {
-        this(context, referrerPreferences, token, MPConfig.getInstance(context));
+    MixpanelLiteAPI(Context context, Future<SharedPreferences> referrerPreferences, String token) {
+        this(context, referrerPreferences, token, MPLConfig.getInstance(context));
     }
 
     /**
      * You shouldn't instantiate MixpanelAPI objects directly.
      * Use MixpanelAPI.getInstance to get an instance.
      */
-    MixpanelAPI(Context context, Future<SharedPreferences> referrerPreferences, String token, MPConfig config) {
+    MixpanelLiteAPI(Context context, Future<SharedPreferences> referrerPreferences, String token,
+                    MPLConfig config) {
         mContext = context;
         mToken = token;
         mConfig = config;
 
         final Map<String, String> deviceInfo = new HashMap<String, String>();
-        deviceInfo.put("$android_lib_version", MPConfig.VERSION);
+        deviceInfo.put("$android_lib_version", MPLConfig.VERSION);
         deviceInfo.put("$android_os", "Android");
         deviceInfo.put("$android_os_version", Build.VERSION.RELEASE == null ? "UNKNOWN" : Build.VERSION.RELEASE);
         deviceInfo.put("$android_manufacturer", Build.MANUFACTURER == null ? "UNKNOWN" : Build.MANUFACTURER);
@@ -124,7 +125,7 @@ public class MixpanelAPI {
             deviceInfo.put("$android_app_version", info.versionName);
             deviceInfo.put("$android_app_version_code", Integer.toString(info.versionCode));
         } catch (final PackageManager.NameNotFoundException e) {
-            MPLog.e(LOGTAG, "Exception getting app version name", e);
+            MPLLog.e(LOGTAG, "Exception getting app version name", e);
         }
         mDeviceInfo = Collections.unmodifiableMap(deviceInfo);
 
@@ -140,7 +141,7 @@ public class MixpanelAPI {
 
         mMessages = getAnalyticsMessages();
 
-        if (mPersistentIdentity.isFirstLaunch(MPDbAdapter.getInstance(mContext).getDatabaseFile().exists())) {
+        if (mPersistentIdentity.isFirstLaunch(MPLDbAdapter.getInstance(mContext).getDatabaseFile().exists())) {
             track(AutomaticEvents.FIRST_OPEN, null, true);
 
             mPersistentIdentity.setHasLaunched();
@@ -208,7 +209,7 @@ public class MixpanelAPI {
      *     in the settings dialog.
      * @return an instance of MixpanelAPI associated with your project
      */
-    public static MixpanelAPI getInstance(Context context, String token) {
+    public static MixpanelLiteAPI getInstance(Context context, String token) {
         if (null == token || null == context) {
             return null;
         }
@@ -216,18 +217,18 @@ public class MixpanelAPI {
             final Context appContext = context.getApplicationContext();
 
             if (null == sReferrerPrefs) {
-                sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPConfig.REFERRER_PREFS_NAME, null);
+                sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPLConfig.REFERRER_PREFS_NAME, null);
             }
 
-            Map <Context, MixpanelAPI> instances = sInstanceMap.get(token);
+            Map<Context, MixpanelLiteAPI> instances = sInstanceMap.get(token);
             if (null == instances) {
-                instances = new HashMap<Context, MixpanelAPI>();
+                instances = new HashMap<Context, MixpanelLiteAPI>();
                 sInstanceMap.put(token, instances);
             }
 
-            MixpanelAPI instance = instances.get(appContext);
+            MixpanelLiteAPI instance = instances.get(appContext);
             if (null == instance && ConfigurationChecker.checkBasicConfiguration(appContext)) {
-                instance = new MixpanelAPI(appContext, sReferrerPrefs, token);
+                instance = new MixpanelLiteAPI(appContext, sReferrerPrefs, token);
                 registerAppLinksListeners(context, instance);
                 instances.put(appContext, instance);
             }
@@ -266,7 +267,7 @@ public class MixpanelAPI {
      * @param config  Your Mixpanel project configuration.
      * @return an instance of MixpanelAPI associated with your project
      */
-    public static MixpanelAPI getInstance(Context context, String token, MPConfig config) {
+    public static MixpanelLiteAPI getInstance(Context context, String token, MPLConfig config) {
         if (null == token || null == context) {
             return null;
         }
@@ -274,19 +275,19 @@ public class MixpanelAPI {
             final Context appContext = context.getApplicationContext();
 
             if (null == sReferrerPrefs) {
-                sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPConfig
+                sReferrerPrefs = sPrefsLoader.loadPreferences(context, MPLConfig
                         .REFERRER_PREFS_NAME, null);
             }
 
-            Map<Context, MixpanelAPI> instances = sInstanceMap.get(token);
+            Map<Context, MixpanelLiteAPI> instances = sInstanceMap.get(token);
             if (null == instances) {
-                instances = new HashMap<Context, MixpanelAPI>();
+                instances = new HashMap<Context, MixpanelLiteAPI>();
                 sInstanceMap.put(token, instances);
             }
 
-            MixpanelAPI instance = instances.get(appContext);
+            MixpanelLiteAPI instance = instances.get(appContext);
             if (null == instance && ConfigurationChecker.checkBasicConfiguration(appContext)) {
-                instance = new MixpanelAPI(appContext, sReferrerPrefs, token, config);
+                instance = new MixpanelLiteAPI(appContext, sReferrerPrefs, token, config);
                 registerAppLinksListeners(context, instance);
                 instances.put(appContext, instance);
             }
@@ -304,7 +305,7 @@ public class MixpanelAPI {
      */
     @Deprecated
     public static void setFlushInterval(Context context, long milliseconds) {
-        MPLog.i(
+        MPLLog.i(
             LOGTAG,
             "MixpanelAPI.setFlushInterval is deprecated. Calling is now a no-op.\n" +
             "    To set a custom Mixpanel flush interval for your application, add\n" +
@@ -328,7 +329,8 @@ public class MixpanelAPI {
             original = getDistinctId();
         }
         if (alias.equals(original)) {
-            MPLog.w(LOGTAG, "Attempted to alias identical distinct_ids " + alias + ". Alias message will not be sent.");
+            MPLLog.w(LOGTAG, "Attempted to alias identical distinct_ids " + alias + ". Alias " +
+                    "message will not be sent.");
             return;
         }
 
@@ -338,7 +340,7 @@ public class MixpanelAPI {
             j.put("original", original);
             track("$create_alias", j);
         } catch (final JSONException e) {
-            MPLog.e(LOGTAG, "Failed to alias", e);
+            MPLLog.e(LOGTAG, "Failed to alias", e);
         }
         flush();
     }
@@ -421,7 +423,7 @@ public class MixpanelAPI {
             try {
                 track(eventName, new JSONObject(properties));
             } catch (NullPointerException e) {
-                MPLog.w(LOGTAG, "Can't have null keys in the properties of trackMap!");
+                MPLLog.w(LOGTAG, "Can't have null keys in the properties of trackMap!");
             }
         }
     }
@@ -514,14 +516,14 @@ public class MixpanelAPI {
      */
     public void registerSuperPropertiesMap(Map<String, Object> superProperties) {
         if (null == superProperties) {
-            MPLog.e(LOGTAG, "registerSuperPropertiesMap does not accept null properties");
+            MPLLog.e(LOGTAG, "registerSuperPropertiesMap does not accept null properties");
             return;
         }
 
         try {
             registerSuperProperties(new JSONObject(superProperties));
         } catch (NullPointerException e) {
-            MPLog.w(LOGTAG, "Can't have null keys in the properties of registerSuperPropertiesMap");
+            MPLLog.w(LOGTAG, "Can't have null keys in the properties of registerSuperPropertiesMap");
         }
     }
 
@@ -573,14 +575,14 @@ public class MixpanelAPI {
      */
     public void registerSuperPropertiesOnceMap(Map<String, Object> superProperties) {
         if (null == superProperties) {
-            MPLog.e(LOGTAG, "registerSuperPropertiesOnceMap does not accept null properties");
+            MPLLog.e(LOGTAG, "registerSuperPropertiesOnceMap does not accept null properties");
             return;
         }
 
         try {
             registerSuperPropertiesOnce(new JSONObject(superProperties));
         } catch (NullPointerException e) {
-            MPLog.w(LOGTAG, "Can't have null keys in the properties of registerSuperPropertiesOnce!");
+            MPLLog.w(LOGTAG, "Can't have null keys in the properties of registerSuperPropertiesOnce!");
         }
     }
 
@@ -661,7 +663,7 @@ public class MixpanelAPI {
      */
     @Deprecated
     public void logPosts() {
-        MPLog.i(
+        MPLLog.i(
                 LOGTAG,
                 "MixpanelAPI.logPosts() is deprecated.\n" +
                         "    To get verbose debug level logging, add\n" +
@@ -686,10 +688,11 @@ public class MixpanelAPI {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             if (mContext.getApplicationContext() instanceof Application) {
                 final Application app = (Application) mContext.getApplicationContext();
-                mMixpanelActivityLifecycleCallbacks = new MixpanelActivityLifecycleCallbacks(this, mConfig);
-                app.registerActivityLifecycleCallbacks(mMixpanelActivityLifecycleCallbacks);
+                mMPLActivityLifecycleCallbacks = new MPLActivityLifecycleCallbacks(this, mConfig);
+                app.registerActivityLifecycleCallbacks(mMPLActivityLifecycleCallbacks);
             } else {
-                MPLog.i(LOGTAG, "Context is not an Application, Mixpanel will not automatically show in-app notifications or A/B test experiments. We won't be able to automatically flush on an app background.");
+                MPLLog.i(LOGTAG, "Context is not an Application, Mixpanel will not automatically " +
+                        "show in-app notifications or A/B test experiments. We won't be able to automatically flush on an app background.");
             }
         }
     }
@@ -704,11 +707,11 @@ public class MixpanelAPI {
      */
     public boolean isAppInForeground() {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            if (mMixpanelActivityLifecycleCallbacks != null) {
-                return mMixpanelActivityLifecycleCallbacks.isInForeground();
+            if (mMPLActivityLifecycleCallbacks != null) {
+                return mMPLActivityLifecycleCallbacks.isInForeground();
             }
         } else {
-            MPLog.e(LOGTAG, "Your build version is below 14. This method will always return false.");
+            MPLLog.e(LOGTAG, "Your build version is below 14. This method will always return false.");
         }
 
         return false;
@@ -722,13 +725,13 @@ public class MixpanelAPI {
     // Package-level access. Used (at least) by GCMReceiver
     // when OS-level events occur.
     /* package */ interface InstanceProcessor {
-        public void process(MixpanelAPI m);
+        public void process(MixpanelLiteAPI m);
     }
 
     /* package */ static void allInstances(InstanceProcessor processor) {
         synchronized (sInstanceMap) {
-            for (final Map<Context, MixpanelAPI> contextInstances : sInstanceMap.values()) {
-                for (final MixpanelAPI instance : contextInstances.values()) {
+            for (final Map<Context, MixpanelLiteAPI> contextInstances : sInstanceMap.values()) {
+                for (final MixpanelLiteAPI instance : contextInstances.values()) {
                     processor.process(instance);
                 }
             }
@@ -820,7 +823,7 @@ public class MixpanelAPI {
             mMessages.eventsMessage(eventDescription);
 
         } catch (final JSONException e) {
-            MPLog.e(LOGTAG, "Exception tracking event " + eventName, e);
+            MPLLog.e(LOGTAG, "Exception tracking event " + eventName, e);
         }
     }
 
@@ -847,12 +850,13 @@ public class MixpanelAPI {
                 final JSONObject message = records.getJSONObject(i);
                 mMessages.peopleMessage(new AnalyticsMessages.PeopleDescription(message, mToken));
             } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Malformed people record stored pending identity, will not send it.", e);
+                MPLLog.e(LOGTAG, "Malformed people record stored pending identity, will not send " +
+                        "it.", e);
             }
         }
     }
 
-    private static void registerAppLinksListeners(Context context, final MixpanelAPI mixpanel) {
+    private static void registerAppLinksListeners(Context context, final MixpanelLiteAPI mixpanel) {
         // Register a BroadcastReceiver to receive com.parse.bolts.measurement_event and track a call to mixpanel
         try {
             final Class<?> clazz = Class.forName("android.support.v4.content.LocalBroadcastManager");
@@ -869,7 +873,7 @@ public class MixpanelAPI {
                             try {
                                 properties.put(key, args.get(key));
                             } catch (final JSONException e) {
-                                MPLog.e(APP_LINKS_LOGTAG, "failed to add key \"" + key + "\" to properties for tracking bolts event", e);
+                                MPLLog.e(APP_LINKS_LOGTAG, "failed to add key \"" + key + "\" to properties for tracking bolts event", e);
                             }
                         }
                     }
@@ -877,13 +881,15 @@ public class MixpanelAPI {
                 }
             }, new IntentFilter("com.parse.bolts.measurement_event"));
         } catch (final InvocationTargetException e) {
-            MPLog.d(APP_LINKS_LOGTAG, "Failed to invoke LocalBroadcastManager.registerReceiver() -- App Links tracking will not be enabled due to this exception", e);
+            MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke LocalBroadcastManager.registerReceiver() -- App Links tracking will not be enabled due to this exception", e);
         } catch (final ClassNotFoundException e) {
-            MPLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be installed: " + e.getMessage());
+            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be " +
+                    "installed: " + e.getMessage());
         } catch (final NoSuchMethodException e) {
-            MPLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be installed: " + e.getMessage());
+            MPLLog.d(APP_LINKS_LOGTAG, "To enable App Links tracking android.support.v4 must be " +
+                    "installed: " + e.getMessage());
         } catch (final IllegalAccessException e) {
-            MPLog.d(APP_LINKS_LOGTAG, "App Links tracking will not be enabled due to this exception: " + e.getMessage());
+            MPLLog.d(APP_LINKS_LOGTAG, "App Links tracking will not be enabled due to this exception: " + e.getMessage());
         }
     }
 
@@ -898,30 +904,32 @@ public class MixpanelAPI {
                 final Method getTargetUrlFromInboundIntent = clazz.getMethod("getTargetUrlFromInboundIntent", Context.class, Intent.class);
                 getTargetUrlFromInboundIntent.invoke(null, context, intent);
             } catch (final InvocationTargetException e) {
-                MPLog.d(APP_LINKS_LOGTAG, "Failed to invoke bolts.AppLinks.getTargetUrlFromInboundIntent() -- Unable to detect inbound App Links", e);
+                MPLLog.d(APP_LINKS_LOGTAG, "Failed to invoke bolts.AppLinks" +
+                        ".getTargetUrlFromInboundIntent() -- Unable to detect inbound App Links", e);
             } catch (final ClassNotFoundException e) {
-                MPLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
+                MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track " +
+                        "App Links: " + e.getMessage());
             } catch (final NoSuchMethodException e) {
-                MPLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
+                MPLLog.d(APP_LINKS_LOGTAG, "Please install the Bolts library >= 1.1.2 to track App Links: " + e.getMessage());
             } catch (final IllegalAccessException e) {
-                MPLog.d(APP_LINKS_LOGTAG, "Unable to detect inbound App Links: " + e.getMessage());
+                MPLLog.d(APP_LINKS_LOGTAG, "Unable to detect inbound App Links: " + e.getMessage());
             }
         } else {
-            MPLog.d(APP_LINKS_LOGTAG, "Context is not an instance of Activity. To detect inbound App Links, pass an instance of an Activity to getInstance.");
+            MPLLog.d(APP_LINKS_LOGTAG, "Context is not an instance of Activity. To detect inbound App Links, pass an instance of an Activity to getInstance.");
         }
     }
 
     private final Context mContext;
     private final AnalyticsMessages mMessages;
-    private final MPConfig mConfig;
+    private final MPLConfig mConfig;
     private final String mToken;
     private final PersistentIdentity mPersistentIdentity;
     private final Map<String, String> mDeviceInfo;
     private final Map<String, Long> mEventTimings;
-    private MixpanelActivityLifecycleCallbacks mMixpanelActivityLifecycleCallbacks;
+    private MPLActivityLifecycleCallbacks mMPLActivityLifecycleCallbacks;
 
     // Maps each token to a singleton MixpanelAPI instance
-    private static final Map<String, Map<Context, MixpanelAPI>> sInstanceMap = new HashMap<String, Map<Context, MixpanelAPI>>();
+    private static final Map<String, Map<Context, MixpanelLiteAPI>> sInstanceMap = new HashMap<String, Map<Context, MixpanelLiteAPI>>();
     private static final SharedPreferencesLoader sPrefsLoader = new SharedPreferencesLoader();
     private static Future<SharedPreferences> sReferrerPrefs;
 

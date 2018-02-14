@@ -7,7 +7,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 
 import com.mixpanel.android.BuildConfig;
-import com.mixpanel.android.util.MPLog;
+import com.mixpanel.android.util.MPLLog;
 import com.mixpanel.android.util.OfflineMode;
 
 import java.security.GeneralSecurityException;
@@ -113,7 +113,7 @@ import javax.net.ssl.SSLSocketFactory;
  * </dl>
  *
  */
-public class MPConfig {
+public class MPLConfig {
 
     public static final String VERSION = BuildConfig.MIXPANEL_VERSION;
 
@@ -126,14 +126,15 @@ public class MPConfig {
     public static final int UI_FEATURES_MIN_API = 16;
 
     // Name for persistent storage of app referral SharedPreferences
-    /* package */ static final String REFERRER_PREFS_NAME = "com.mixpanel.android.mpmetrics.ReferralInfo";
+    /* package */ static final String REFERRER_PREFS_NAME = "com.mixpanellite.android.mpmetrics" +
+            ".ReferralInfo";
 
     // Max size of the number of notifications we will hold in memory. Since they may contain images,
     // we don't want to suck up all of the memory on the device.
     /* package */ static final int MAX_NOTIFICATION_CACHE_COUNT = 2;
 
     // Instances are safe to store, since they're immutable and always the same.
-    public static MPConfig getInstance(Context context) {
+    public static MPLConfig getInstance(Context context) {
         synchronized (sInstanceLock) {
             if (null == sInstance) {
                 final Context appContext = context.getApplicationContext();
@@ -196,7 +197,7 @@ public class MPConfig {
         mOfflineMode = offlineMode;
     }
 
-    /* package */ MPConfig(Bundle metaData, Context context) {
+    /* package */ MPLConfig(Bundle metaData, Context context) {
 
         // By default, we use a clean, FACTORY default SSLSocket. In general this is the right
         // thing to do, and some other third party libraries change the
@@ -206,18 +207,20 @@ public class MPConfig {
             sslContext.init(null, null, null);
             foundSSLFactory = sslContext.getSocketFactory();
         } catch (final GeneralSecurityException e) {
-            MPLog.i("MixpanelAPI.Conf", "System has no SSL support. Built-in events editor will not be available", e);
+            MPLLog.i("MixpanelAPI.Conf", "System has no SSL support. Built-in events editor will " +
+                    "not be available", e);
             foundSSLFactory = null;
         }
         mSSLSocketFactory = foundSSLFactory;
 
         DEBUG = metaData.getBoolean("com.mixpanel.android.MPConfig.EnableDebugLogging", false);
         if (DEBUG) {
-            MPLog.setLevel(MPLog.VERBOSE);
+            MPLLog.setLevel(MPLLog.VERBOSE);
         }
 
         if (metaData.containsKey("com.mixpanel.android.MPConfig.DebugFlushInterval")) {
-            MPLog.w(LOGTAG, "We do not support com.mixpanel.android.MPConfig.DebugFlushInterval anymore. There will only be one flush interval. Please, update your AndroidManifest.xml.");
+            MPLLog.w(LOGTAG, "We do not support com.mixpanel.android.MPConfig.DebugFlushInterval " +
+                    "anymore. There will only be one flush interval. Please, update your AndroidManifest.xml.");
         }
 
         mBulkUploadLimit = metaData.getInt("com.mixpanel.android.MPConfig.BulkUploadLimit", 40); // 40 records default
@@ -238,7 +241,7 @@ public class MPConfig {
         }
         mEventsEndpoint = eventsEndpoint;
 
-        MPLog.v(LOGTAG,
+        MPLLog.v(LOGTAG,
                 "Mixpanel (" + VERSION + ") configured with:\n" +
                 "    BulkUploadLimit " + getBulkUploadLimit() + "\n" +
                 "    FlushInterval " + getFlushInterval() + "\n" +
@@ -324,7 +327,8 @@ public class MPConfig {
     ///////////////////////////////////////////////
 
     // Package access for testing only- do not call directly in library code
-    /* package */ static MPConfig readConfig(Context appContext) {
+    /* package */
+    static MPLConfig readConfig(Context appContext) {
         final String packageName = appContext.getPackageName();
         try {
             final ApplicationInfo appInfo = appContext.getPackageManager().getApplicationInfo(packageName, PackageManager.GET_META_DATA);
@@ -332,7 +336,7 @@ public class MPConfig {
             if (null == configBundle) {
                 configBundle = new Bundle();
             }
-            return new MPConfig(configBundle, appContext);
+            return new MPLConfig(configBundle, appContext);
         } catch (final NameNotFoundException e) {
             throw new RuntimeException("Can't configure Mixpanel with package name " + packageName, e);
         }
@@ -355,7 +359,7 @@ public class MPConfig {
     private SSLSocketFactory mSSLSocketFactory;
     private OfflineMode mOfflineMode;
 
-    private static MPConfig sInstance;
+    private static MPLConfig sInstance;
     private static final Object sInstanceLock = new Object();
     private static final String LOGTAG = "MixpanelAPI.Conf";
 }

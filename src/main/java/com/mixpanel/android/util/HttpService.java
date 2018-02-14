@@ -6,8 +6,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 
-import com.mixpanel.android.mpmetrics.MPConfig;
-
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -43,7 +41,8 @@ public class HttpService implements RemoteService {
                             decideMixpanelInet.isLoopbackAddress() ||
                             decideMixpanelInet.isAnyLocalAddress();
                     if (sIsMixpanelBlocked) {
-                        MPLog.v(LOGTAG, "AdBlocker is enabled. Won't be able to use Mixpanel services.");
+                        MPLLog.v(LOGTAG, "AdBlocker is enabled. Won't be able to use Mixpanel " +
+                                "services.");
                     }
                 } catch (Exception e) {
                 }
@@ -67,14 +66,14 @@ public class HttpService implements RemoteService {
             final NetworkInfo netInfo = cm.getActiveNetworkInfo();
             if (netInfo == null) {
                 isOnline = true;
-                MPLog.v(LOGTAG, "A default network has not been set so we cannot be certain whether we are offline");
+                MPLLog.v(LOGTAG, "A default network has not been set so we cannot be certain whether we are offline");
             } else {
                 isOnline = netInfo.isConnectedOrConnecting();
-                MPLog.v(LOGTAG, "ConnectivityManager says we " + (isOnline ? "are" : "are not") + " online");
+                MPLLog.v(LOGTAG, "ConnectivityManager says we " + (isOnline ? "are" : "are not") + " online");
             }
         } catch (final SecurityException e) {
             isOnline = true;
-            MPLog.v(LOGTAG, "Don't have permission to check connectivity, will assume we are online");
+            MPLLog.v(LOGTAG, "Don't have permission to check connectivity, will assume we are online");
         }
         return isOnline;
     }
@@ -86,7 +85,7 @@ public class HttpService implements RemoteService {
             onOfflineMode = offlineMode != null && offlineMode.isOffline();
         } catch (Exception e) {
             onOfflineMode = false;
-            MPLog.v(LOGTAG, "Client State should not throw exception, will assume is not on offline mode", e);
+            MPLLog.v(LOGTAG, "Client State should not throw exception, will assume is not on offline mode", e);
         }
 
         return onOfflineMode;
@@ -94,7 +93,7 @@ public class HttpService implements RemoteService {
 
     @Override
     public byte[] performRequest(String endpointUrl, Map<String, Object> params, SSLSocketFactory socketFactory) throws ServiceUnavailableException, IOException {
-        MPLog.v(LOGTAG, "Attempting request to " + endpointUrl);
+        MPLLog.v(LOGTAG, "Attempting request to " + endpointUrl);
 
         byte[] response = null;
 
@@ -144,7 +143,7 @@ public class HttpService implements RemoteService {
                 in = null;
                 succeeded = true;
             } catch (final EOFException e) {
-                MPLog.d(LOGTAG, "Failure to connect, likely caused by a known issue with Android lib. Retrying.");
+                MPLLog.d(LOGTAG, "Failure to connect, likely caused by a known issue with Android lib. Retrying.");
                 retries = retries + 1;
             } catch (final IOException e) {
                 if (connection.getResponseCode() >= MIN_UNAVAILABLE_HTTP_RESPONSE_CODE && connection.getResponseCode() <= MAX_UNAVAILABLE_HTTP_RESPONSE_CODE) {
@@ -165,7 +164,7 @@ public class HttpService implements RemoteService {
             }
         }
         if (retries >= 3) {
-            MPLog.v(LOGTAG, "Could not connect to Mixpanel service after three retries.");
+            MPLLog.v(LOGTAG, "Could not connect to Mixpanel service after three retries.");
         }
         return response;
     }

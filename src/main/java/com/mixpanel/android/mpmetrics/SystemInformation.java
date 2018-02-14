@@ -1,8 +1,5 @@
 package com.mixpanel.android.mpmetrics;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -19,7 +16,10 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-import com.mixpanel.android.util.MPLog;
+import com.mixpanel.android.util.MPLLog;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * Abstracts away possibly non-present system information classes,
@@ -50,7 +50,8 @@ import com.mixpanel.android.util.MPLog;
             foundAppVersionName = packageInfo.versionName;
             foundAppVersionCode = packageInfo.versionCode;
         } catch (NameNotFoundException e) {
-            MPLog.w(LOGTAG, "System information constructed with a context that apparently doesn't exist.");
+            MPLLog.w(LOGTAG, "System information constructed with a context that apparently " +
+                    "doesn't exist.");
         }
 
         ApplicationInfo applicationInfo = context.getApplicationInfo();
@@ -78,9 +79,10 @@ import com.mixpanel.android.util.MPLog;
                 foundNFC = (Boolean) hasSystemFeatureMethod.invoke(packageManager, "android.hardware.nfc");
                 foundTelephony = (Boolean) hasSystemFeatureMethod.invoke(packageManager, "android.hardware.telephony");
             } catch (InvocationTargetException e) {
-                MPLog.w(LOGTAG, "System version appeared to support PackageManager.hasSystemFeature, but we were unable to call it.");
+                MPLLog.w(LOGTAG, "System version appeared to support PackageManager" +
+                        ".hasSystemFeature, but we were unable to call it.");
             } catch (IllegalAccessException e) {
-                MPLog.w(LOGTAG, "System version appeared to support PackageManager.hasSystemFeature, but we were unable to call it.");
+                MPLLog.w(LOGTAG, "System version appeared to support PackageManager.hasSystemFeature, but we were unable to call it.");
             }
         }
 

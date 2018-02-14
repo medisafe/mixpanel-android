@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.mixpanel.android.util.MPLog;
+import com.mixpanel.android.util.MPLLog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,9 +24,9 @@ import java.util.Map;
  * by a single thread.
  *
  */
-/* package */ class MPDbAdapter {
+/* package */ class MPLDbAdapter {
     private static final String LOGTAG = "MixpanelAPI.Database";
-    private static final Map<Context, MPDbAdapter> sInstances = new HashMap<>();
+    private static final Map<Context, MPLDbAdapter> sInstances = new HashMap<>();
 
     public enum Table {
         EVENTS("events");
@@ -51,7 +51,7 @@ import java.util.Map;
     public static final int DB_OUT_OF_MEMORY_ERROR = -2;
     public static final int DB_UNDEFINED_CODE = -3;
 
-    private static final String DATABASE_NAME = "mixpanel";
+    private static final String DATABASE_NAME = "mixpanellite";
     private static final int DATABASE_VERSION = 5;
 
     private static final String CREATE_EVENTS_TABLE =
@@ -70,7 +70,7 @@ import java.util.Map;
         MPDatabaseHelper(Context context, String dbName) {
             super(context, dbName, null, DATABASE_VERSION);
             mDatabaseFile = context.getDatabasePath(dbName);
-            mConfig = MPConfig.getInstance(context);
+            mConfig = MPLConfig.getInstance(context);
         }
 
         /**
@@ -83,7 +83,7 @@ import java.util.Map;
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            MPLog.v(LOGTAG, "Creating a new Mixpanel events DB");
+            MPLLog.v(LOGTAG, "Creating a new Mixpanel events DB");
 
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(EVENTS_TIME_INDEX);
@@ -91,7 +91,7 @@ import java.util.Map;
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            MPLog.v(LOGTAG, "Upgrading app, replacing Mixpanel events DB");
+            MPLLog.v(LOGTAG, "Upgrading app, replacing Mixpanel events DB");
 
             if (newVersion == 5) {
                 migrateTableFrom4To5(db);
@@ -129,23 +129,23 @@ import java.util.Map;
         }
 
         private final File mDatabaseFile;
-        private final MPConfig mConfig;
+        private final MPLConfig mConfig;
     }
 
-    public MPDbAdapter(Context context) {
+    public MPLDbAdapter(Context context) {
         this(context, DATABASE_NAME);
     }
 
-    public MPDbAdapter(Context context, String dbName) {
+    public MPLDbAdapter(Context context, String dbName) {
         mDb = new MPDatabaseHelper(context, dbName);
     }
 
-    public static MPDbAdapter getInstance(Context context) {
+    public static MPLDbAdapter getInstance(Context context) {
         synchronized (sInstances) {
             final Context appContext = context.getApplicationContext();
-            MPDbAdapter ret;
+            MPLDbAdapter ret;
             if (! sInstances.containsKey(appContext)) {
-                ret = new MPDbAdapter(appContext);
+                ret = new MPLDbAdapter(appContext);
                 sInstances.put(appContext, ret);
             } else {
                 ret = sInstances.get(appContext);
@@ -167,7 +167,8 @@ import java.util.Map;
     public int addJSON(JSONObject j, String token, Table table, boolean isAutomaticRecord) {
         // we are aware of the race condition here, but what can we do..?
         if (!this.belowMemThreshold()) {
-            MPLog.e(LOGTAG, "There is not enough space left on the device to store Mixpanel data, so data was discarded");
+            MPLLog.e(LOGTAG, "There is not enough space left on the device to store Mixpanel " +
+                    "data, so data was discarded");
             return DB_OUT_OF_MEMORY_ERROR;
         }
 
@@ -190,7 +191,7 @@ import java.util.Map;
             c.moveToFirst();
             count = c.getInt(0);
         } catch (final SQLiteException e) {
-            MPLog.e(LOGTAG, "Could not add Mixpanel data to table " + tableName + ". Re-initializing database.", e);
+            MPLLog.e(LOGTAG, "Could not add Mixpanel data to table " + tableName + ". Re-initializing database.", e);
 
             // We assume that in general, the results of a SQL exception are
             // unrecoverable, and could be associated with an oversized or
@@ -228,7 +229,7 @@ import java.util.Map;
             }
             db.delete(tableName, deleteQuery.toString(), null);
         } catch (final SQLiteException e) {
-            MPLog.e(LOGTAG, "Could not clean sent Mixpanel records from " + tableName + ". Re-initializing database.", e);
+            MPLLog.e(LOGTAG, "Could not clean sent Mixpanel records from " + tableName + ". Re-initializing database.", e);
 
             // We assume that in general, the results of a SQL exception are
             // unrecoverable, and could be associated with an oversized or
@@ -252,7 +253,8 @@ import java.util.Map;
             final SQLiteDatabase db = mDb.getWritableDatabase();
             db.delete(tableName, KEY_CREATED_AT + " <= " + time, null);
         } catch (final SQLiteException e) {
-            MPLog.e(LOGTAG, "Could not clean timed-out Mixpanel records from " + tableName + ". Re-initializing database.", e);
+            MPLLog.e(LOGTAG, "Could not clean timed-out Mixpanel records from " + tableName + ". " +
+                    "Re-initializing database.", e);
 
             // We assume that in general, the results of a SQL exception are
             // unrecoverable, and could be associated with an oversized or
@@ -279,7 +281,7 @@ import java.util.Map;
             final SQLiteDatabase db = mDb.getWritableDatabase();
             db.delete(tableName, KEY_AUTOMATIC_DATA + " = 1 AND " + KEY_TOKEN + " = '" + token + "'", null);
         } catch (final SQLiteException e) {
-            MPLog.e(LOGTAG, "Could not clean automatic Mixpanel records from " + tableName + ". Re-initializing database.", e);
+            MPLLog.e(LOGTAG, "Could not clean automatic Mixpanel records from " + tableName + ". Re-initializing database.", e);
 
             // We assume that in general, the results of a SQL exception are
             // unrecoverable, and could be associated with an oversized or
@@ -349,7 +351,7 @@ import java.util.Map;
                 data = arr.toString();
             }
         } catch (final SQLiteException e) {
-            MPLog.e(LOGTAG, "Could not pull records for Mixpanel out of database " + tableName + ". Waiting to send.", e);
+            MPLLog.e(LOGTAG, "Could not pull records for Mixpanel out of database " + tableName + ". Waiting to send.", e);
 
             // We'll dump the DB on write failures, but with reads we can
             // let things ride in hopes the issue clears up.

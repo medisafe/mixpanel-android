@@ -1,6 +1,15 @@
 package com.mixpanel.android.mpmetrics;
 
-import java.io.File;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import com.mixpanel.android.util.MPLLog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,16 +18,6 @@ import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import com.mixpanel.android.util.MPLog;
 
 // In order to use writeEdits, we have to suppress the linter's check for commit()/apply()
 @SuppressLint("CommitPrefEdits")
@@ -34,7 +33,7 @@ import com.mixpanel.android.util.MPLog;
             try {
                 waitingObjects = new JSONArray(waitingPeopleRecords);
             } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Waiting people records were unreadable.");
+                MPLLog.e(LOGTAG, "Waiting people records were unreadable.");
                 return null;
             }
 
@@ -45,7 +44,7 @@ import com.mixpanel.android.util.MPLog;
                     ob.put("$distinct_id", peopleDistinctId);
                     ret.put(ob);
                 } catch (final JSONException e) {
-                    MPLog.e(LOGTAG, "Unparsable object found in waiting people records", e);
+                    MPLLog.e(LOGTAG, "Unparsable object found in waiting people records", e);
                 }
             }
 
@@ -97,7 +96,8 @@ import com.mixpanel.android.util.MPLog;
             try {
                 ob.put(key, superProperties.get(key));
             } catch (JSONException e) {
-                MPLog.e(LOGTAG, "Object read from one JSON Object cannot be written to another", e);
+                MPLLog.e(LOGTAG, "Object read from one JSON Object cannot be written to another",
+                        e);
             }
         }
     }
@@ -114,13 +114,13 @@ import com.mixpanel.android.util.MPLog;
                 copy.put(k, v);
             }
         } catch (JSONException e) {
-            MPLog.e(LOGTAG, "Can't copy from one JSONObject to another", e);
+            MPLLog.e(LOGTAG, "Can't copy from one JSONObject to another", e);
             return;
         }
 
         final JSONObject replacementCache = updates.update(copy);
         if (null == replacementCache) {
-            MPLog.w(LOGTAG, "An update to Mixpanel's super properties returned null, and will have no effect.");
+            MPLLog.w(LOGTAG, "An update to Mixpanel's super properties returned null, and will have no effect.");
             return;
         }
 
@@ -186,9 +186,9 @@ import com.mixpanel.android.util.MPLog;
             ret = waitingPeopleRecordsForSending(prefs);
             readIdentities();
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Couldn't read waiting people records from shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Couldn't read waiting people records from shared preferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Couldn't read waiting people records from shared preferences.", e);
+            MPLLog.e(LOGTAG, "Couldn't read waiting people records from shared preferences.", e);
         }
         return ret;
     }
@@ -220,7 +220,7 @@ import com.mixpanel.android.util.MPLog;
             try {
                propCache.put(key, superProperties.get(key));
             } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Exception registering super property.", e);
+                MPLLog.e(LOGTAG, "Exception registering super property.", e);
             }
         }
 
@@ -234,9 +234,9 @@ import com.mixpanel.android.util.MPLog;
             editor.putString("push_id", registrationId);
             writeEdits(editor);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Can't write push id to shared preferences", e.getCause());
+            MPLLog.e(LOGTAG, "Can't write push id to shared preferences", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Can't write push id to shared preferences", e);
+            MPLLog.e(LOGTAG, "Can't write push id to shared preferences", e);
         }
     }
 
@@ -247,9 +247,9 @@ import com.mixpanel.android.util.MPLog;
             editor.remove("push_id");
             writeEdits(editor);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Can't write push id to shared preferences", e.getCause());
+            MPLLog.e(LOGTAG, "Can't write push id to shared preferences", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Can't write push id to shared preferences", e);
+            MPLLog.e(LOGTAG, "Can't write push id to shared preferences", e);
         }
     }
 
@@ -259,9 +259,9 @@ import com.mixpanel.android.util.MPLog;
             final SharedPreferences prefs = mLoadStoredPreferences.get();
             ret = prefs.getString("push_id", null);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Can't write push id to shared preferences", e.getCause());
+            MPLLog.e(LOGTAG, "Can't write push id to shared preferences", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Can't write push id to shared preferences", e);
+            MPLLog.e(LOGTAG, "Can't write push id to shared preferences", e);
         }
         return ret;
     }
@@ -329,7 +329,7 @@ import com.mixpanel.android.util.MPLog;
                 try {
                     propCache.put(key, superProperties.get(key));
                 } catch (final JSONException e) {
-                    MPLog.e(LOGTAG, "Exception registering super property.", e);
+                    MPLLog.e(LOGTAG, "Exception registering super property.", e);
                 }
             }
         }// for
@@ -348,9 +348,9 @@ import com.mixpanel.android.util.MPLog;
             SharedPreferences prefs = mMixpanelPreferences.get();
             firstLaunch = prefs.getBoolean(token, false);
         }  catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Couldn't read internal Mixpanel shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Couldn't read internal Mixpanel shared preferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Couldn't read internal Mixpanel from shared preferences.", e);
+            MPLLog.e(LOGTAG, "Couldn't read internal Mixpanel from shared preferences.", e);
         }
         return firstLaunch;
     }
@@ -361,9 +361,9 @@ import com.mixpanel.android.util.MPLog;
             mixpanelEditor.putBoolean(token, true);
             writeEdits(mixpanelEditor);
         } catch (ExecutionException e) {
-            MPLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e.getCause());
         } catch (InterruptedException e) {
-            MPLog.e(LOGTAG, "Couldn't write internal Mixpanel from shared preferences.", e);
+            MPLLog.e(LOGTAG, "Couldn't write internal Mixpanel from shared preferences.", e);
         }
     }
 
@@ -392,9 +392,9 @@ import com.mixpanel.android.util.MPLog;
                 return true;
             }
         } catch (ExecutionException e) {
-            MPLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e.getCause());
         } catch (InterruptedException e) {
-            MPLog.e(LOGTAG, "Couldn't write internal Mixpanel from shared preferences.", e);
+            MPLLog.e(LOGTAG, "Couldn't write internal Mixpanel from shared preferences.", e);
         }
 
         return false;
@@ -426,9 +426,9 @@ import com.mixpanel.android.util.MPLog;
             mixpanelPreferencesEditor.putBoolean("has_launched", true);
             writeEdits(mixpanelPreferencesEditor);
         } catch (ExecutionException e) {
-            MPLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e.getCause());
         } catch (InterruptedException e) {
-            MPLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e);
+            MPLLog.e(LOGTAG, "Couldn't write internal Mixpanel shared preferences.", e);
         }
     }
 
@@ -442,9 +442,9 @@ import com.mixpanel.android.util.MPLog;
                 campaignIds.add(Integer.valueOf(stTokenizer.nextToken()));
             }
         } catch (ExecutionException e) {
-            MPLog.e(LOGTAG, "Couldn't read Mixpanel shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Couldn't read Mixpanel shared preferences.", e.getCause());
         } catch (InterruptedException e) {
-            MPLog.e(LOGTAG, "Couldn't read Mixpanel shared preferences.", e);
+            MPLLog.e(LOGTAG, "Couldn't read Mixpanel shared preferences.", e);
         }
         return campaignIds;
     }
@@ -457,9 +457,9 @@ import com.mixpanel.android.util.MPLog;
             editor.putString("seen_campaign_ids", campaignIds + notificationId + DELIMITER);
             writeEdits(editor);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Can't write campaign d to shared preferences", e.getCause());
+            MPLLog.e(LOGTAG, "Can't write campaign d to shared preferences", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Can't write campaign id to shared preferences", e);
+            MPLLog.e(LOGTAG, "Can't write campaign id to shared preferences", e);
         }
     }
 
@@ -478,14 +478,14 @@ import com.mixpanel.android.util.MPLog;
         try {
             final SharedPreferences prefs = mLoadStoredPreferences.get();
             final String props = prefs.getString("super_properties", "{}");
-            MPLog.v(LOGTAG, "Loading Super Properties " + props);
+            MPLLog.v(LOGTAG, "Loading Super Properties " + props);
             mSuperPropertiesCache = new JSONObject(props);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Cannot load superProperties from SharedPreferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Cannot load superProperties from SharedPreferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Cannot load superProperties from SharedPreferences.", e);
+            MPLLog.e(LOGTAG, "Cannot load superProperties from SharedPreferences.", e);
         } catch (final JSONException e) {
-            MPLog.e(LOGTAG, "Cannot parse stored superProperties");
+            MPLLog.e(LOGTAG, "Cannot parse stored superProperties");
             storeSuperProperties();
         } finally {
             if (null == mSuperPropertiesCache) {
@@ -510,21 +510,21 @@ import com.mixpanel.android.util.MPLog;
                 mReferrerPropertiesCache.put(prefsName, prefsVal.toString());
             }
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Cannot load referrer properties from shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Cannot load referrer properties from shared preferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Cannot load referrer properties from shared preferences.", e);
+            MPLLog.e(LOGTAG, "Cannot load referrer properties from shared preferences.", e);
         }
     }
 
     // All access should be synchronized on this
     private void storeSuperProperties() {
         if (null == mSuperPropertiesCache) {
-            MPLog.e(LOGTAG, "storeSuperProperties should not be called with uninitialized superPropertiesCache.");
+            MPLLog.e(LOGTAG, "storeSuperProperties should not be called with uninitialized superPropertiesCache.");
             return;
         }
 
         final String props = mSuperPropertiesCache.toString();
-        MPLog.v(LOGTAG, "Storing Super Properties " + props);
+        MPLLog.v(LOGTAG, "Storing Super Properties " + props);
 
         try {
             final SharedPreferences prefs = mLoadStoredPreferences.get();
@@ -532,9 +532,9 @@ import com.mixpanel.android.util.MPLog;
             editor.putString("super_properties", props);
             writeEdits(editor);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Cannot store superProperties in shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Cannot store superProperties in shared preferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Cannot store superProperties in shared preferences.", e);
+            MPLLog.e(LOGTAG, "Cannot store superProperties in shared preferences.", e);
         }
     }
 
@@ -544,9 +544,9 @@ import com.mixpanel.android.util.MPLog;
         try {
             prefs = mLoadStoredPreferences.get();
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Cannot read distinct ids from sharedPreferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Cannot read distinct ids from sharedPreferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Cannot read distinct ids from sharedPreferences.", e);
+            MPLLog.e(LOGTAG, "Cannot read distinct ids from sharedPreferences.", e);
         }
 
         if (null == prefs) {
@@ -562,7 +562,7 @@ import com.mixpanel.android.util.MPLog;
             try {
                 mWaitingPeopleRecords = new JSONArray(storedWaitingRecord);
             } catch (final JSONException e) {
-                MPLog.e(LOGTAG, "Could not interpret waiting people JSON record " + storedWaitingRecord);
+                MPLLog.e(LOGTAG, "Could not interpret waiting people JSON record " + storedWaitingRecord);
             }
         }
 
@@ -589,9 +589,9 @@ import com.mixpanel.android.util.MPLog;
             }
             writeEdits(prefsEditor);
         } catch (final ExecutionException e) {
-            MPLog.e(LOGTAG, "Can't write distinct ids to shared preferences.", e.getCause());
+            MPLLog.e(LOGTAG, "Can't write distinct ids to shared preferences.", e.getCause());
         } catch (final InterruptedException e) {
-            MPLog.e(LOGTAG, "Can't write distinct ids to shared preferences.", e);
+            MPLLog.e(LOGTAG, "Can't write distinct ids to shared preferences.", e);
         }
     }
 

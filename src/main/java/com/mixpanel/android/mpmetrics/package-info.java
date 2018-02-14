@@ -3,7 +3,8 @@
  * Android apps. You can use Mixpanel to send events, update people analytics properties,
  * display push notifications and other Mixpanel-driven content to your users.
  *
- * The primary interface to Mixpanel services is in {@link com.mixpanel.android.mpmetrics.MixpanelAPI}.
+ * The primary interface to Mixpanel services is in
+ * {@link com.mixpanel.android.mpmetrics.MixpanelLiteAPI}.
  * At it's simplest, you can send events with
  * <pre>
  * {@code

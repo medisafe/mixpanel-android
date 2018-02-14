@@ -31,9 +31,9 @@ public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
     @Override
     public void uncaughtException(final Thread t, final Throwable e) {
         // Only one worker thread - giving priority to storing the event first and then flush
-        MixpanelAPI.allInstances(new MixpanelAPI.InstanceProcessor() {
+        MixpanelLiteAPI.allInstances(new MixpanelLiteAPI.InstanceProcessor() {
             @Override
-            public void process(MixpanelAPI mixpanel) {
+            public void process(MixpanelLiteAPI mixpanel) {
                 try {
                     final JSONObject messageProp = new JSONObject();
                     messageProp.put(AutomaticEvents.APP_CRASHED_REASON, e.toString());
@@ -42,9 +42,9 @@ public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
             }
         });
 
-        MixpanelAPI.allInstances(new MixpanelAPI.InstanceProcessor() {
+        MixpanelLiteAPI.allInstances(new MixpanelLiteAPI.InstanceProcessor() {
             @Override
-            public void process(MixpanelAPI mixpanel) {
+            public void process(MixpanelLiteAPI mixpanel) {
             }
         });
 

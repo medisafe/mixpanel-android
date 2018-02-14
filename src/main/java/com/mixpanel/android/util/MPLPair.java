@@ -10,9 +10,9 @@ import android.util.Pair;
  * first and second objects are never null. However, Mixpanel relies on the fist object to
  * be null to apply wildcard changes.
  */
-public class MPPair<F, S> extends Pair<F, S> {
+public class MPLPair<F, S> extends Pair<F, S> {
 
-    public MPPair(F first, S second) {
+    public MPLPair(F first, S second) {
         super(first, second);
     }
 
