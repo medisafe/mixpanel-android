@@ -32,6 +32,7 @@ android {
 
         buildConfigField "String", "MIXPANEL_LITE_VERSION", "\"${version}\""
 
+
         lintOptions {
             abortOnError true
             warningsAsErrors false
