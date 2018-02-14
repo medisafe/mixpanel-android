@@ -124,13 +124,6 @@ public class MixpanelLiteAPI {
         mPersistentIdentity = getPersistentIdentity(context, referrerPreferences, token);
         mEventTimings = mPersistentIdentity.getTimeEvents();
 
-        // TODO reading persistent identify immediately forces the lazy load of the preferences, and defeats the
-        // purpose of PersistentIdentity's laziness.
-        String decideId = mPersistentIdentity.getPeopleDistinctId();
-        if (null == decideId) {
-            decideId = mPersistentIdentity.getEventsDistinctId();
-        }
-
         mMessages = getAnalyticsMessages();
 
         if (mPersistentIdentity.isFirstLaunch(MPLDbAdapter.getInstance(mContext).getDatabaseFile().exists())) {
