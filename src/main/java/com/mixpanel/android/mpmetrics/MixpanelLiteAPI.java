@@ -817,6 +817,4 @@ public class MixpanelLiteAPI {
     private static Future<SharedPreferences> sReferrerPrefs;
 
     private static final String LOGTAG = "MixpanelLiteAPI.API";
-    private static final String APP_LINKS_LOGTAG = "MixpanelLiteAPI.AL";
-    private static final String ENGAGE_DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss";
 }
