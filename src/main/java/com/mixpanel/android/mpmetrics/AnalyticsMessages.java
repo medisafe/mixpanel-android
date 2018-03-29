@@ -510,6 +510,10 @@ import javax.net.ssl.SSLSocketFactory;
                 if (bluetoothVersion != null)
                     ret.put("$bluetooth_version", bluetoothVersion);
 
+                final String orientation = mSystemInformation.getOrientation();
+                if (bluetoothVersion != null)
+                    ret.put("$orientation", orientation);
+
                 return ret;
             }
 

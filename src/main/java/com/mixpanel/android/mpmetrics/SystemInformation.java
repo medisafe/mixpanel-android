@@ -194,6 +194,18 @@ import java.lang.reflect.Method;
         return bluetoothVersion;
     }
 
+    public String getOrientation() {
+        String orientation = "undefined";
+        int value = mContext.getResources().getConfiguration().orientation;
+        if (value == 1) {
+            orientation = "portrait";
+        } else if (value == 2) {
+            orientation = "landscape";
+        }
+
+        return orientation;
+    }
+
     private final Context mContext;
 
     // Unchanging facts
